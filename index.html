@@ -1,0 +1,1484 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>QC Dashboard — LSN</title>
+<style>
+:root{--bg:#0F1923;--surface:#182433;--surface2:#1E2F42;--border:#1E3048;--text:#E8EDF2;--text-muted:#6B8099;--text-dim:#3D5470;--up:#00C896;--down:#FF4D6A;--accent:#3B8AFF;--sb:#0B1520;--radius:10px;--shadow:0 2px 12px rgba(0,0,0,.35)}
+:root[data-theme="light"]{--bg:#EFF3F8;--surface:#fff;--surface2:#F4F8FC;--border:#D4E0ED;--text:#0F1923;--text-muted:#5A7A96;--text-dim:#A0B8CC;--up:#008F6A;--down:#D92B4B;--accent:#2563EB;--sb:#0F1923}
+@media(prefers-color-scheme:light){:root:not([data-theme="dark"]){--bg:#EFF3F8;--surface:#fff;--surface2:#F4F8FC;--border:#D4E0ED;--text:#0F1923;--text-muted:#5A7A96;--text-dim:#A0B8CC;--up:#008F6A;--down:#D92B4B;--accent:#2563EB;--sb:#0F1923}}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--text);display:flex;height:100vh;overflow:hidden;font-size:14px}
+
+/* SIDEBAR */
+.sb{width:215px;flex-shrink:0;background:var(--sb);display:flex;flex-direction:column;border-right:1px solid rgba(255,255,255,.06)}
+.sb-logo{padding:16px 16px 12px;border-bottom:1px solid rgba(255,255,255,.06)}
+.logo-box{width:26px;height:26px;background:#3B8AFF;border-radius:6px;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:13px;color:#fff;flex-shrink:0}
+.logo-row{display:flex;align-items:center;gap:8px}
+.logo-name{color:#fff;font-weight:700;font-size:13px;letter-spacing:.04em}
+.logo-sub{color:rgba(255,255,255,.3);font-size:10px;letter-spacing:.1em;margin-top:1px}
+.sb-nav{padding:8px 8px 0;flex:1;overflow-y:auto}
+.nl{color:rgba(255,255,255,.2);font-size:10px;font-weight:600;letter-spacing:.12em;padding:8px 8px 3px;text-transform:uppercase}
+.ni{display:flex;align-items:center;gap:9px;padding:8px 9px;border-radius:7px;color:rgba(255,255,255,.42);font-size:12.5px;cursor:pointer;transition:all .12s;margin-bottom:1px;user-select:none}
+.ni:hover{background:rgba(255,255,255,.06);color:rgba(255,255,255,.8)}
+.ni.active{background:rgba(59,138,255,.2);color:#3B8AFF}
+.ni svg{width:14px;height:14px;flex-shrink:0}
+
+/* SIDEBAR FILTERS */
+.sb-filters{padding:8px 8px 10px;border-top:1px solid rgba(255,255,255,.06)}
+.sb-sel{width:100%;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.1);border-radius:7px;color:rgba(255,255,255,.8);padding:6px 28px 6px 9px;font-size:11.5px;cursor:pointer;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%236B8099'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 8px center;margin-bottom:6px}
+.sb-sel option{color:#000;background:#fff}
+:root[data-theme="light"] .sb-sel{background-color:rgba(0,0,0,.04);border-color:#D4E0ED;color:#0F1923;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%235A7A96'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 8px center}
+.sb-footer{padding:10px 14px;border-top:1px solid rgba(255,255,255,.06)}
+.live-dot{width:6px;height:6px;border-radius:50%;background:#00C896;display:inline-block;margin-right:5px}
+
+/* MAIN */
+.main{flex:1;display:flex;flex-direction:column;overflow:hidden}
+.topbar{background:var(--surface);border-bottom:1px solid var(--border);padding:0 18px;display:flex;align-items:center;gap:10px;height:48px;flex-shrink:0}
+.tb-title{font-weight:700;font-size:14px;color:var(--text);margin-right:auto}
+.vtab{padding:4px 11px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;border:1px solid var(--border);color:var(--text-muted);background:transparent;transition:all .12s}
+.vtab:hover{background:var(--border);color:var(--text)}
+.vtab.active{background:var(--accent);border-color:var(--accent);color:#fff}
+.theme-btn{background:var(--surface2);border:1px solid var(--border);color:var(--text-muted);padding:4px 9px;border-radius:6px;font-size:11px;cursor:pointer}
+
+/* DATE BAR (top) */
+.date-bar{background:var(--surface);border-bottom:1px solid var(--border);padding:7px 18px;display:flex;align-items:center;gap:6px;overflow-x:auto;flex-shrink:0;scrollbar-width:none}
+.date-bar::-webkit-scrollbar{display:none}
+/* WEEK BAR (below dates) */
+.week-bar{background:var(--surface2);border-bottom:1px solid var(--border);padding:5px 18px;display:flex;align-items:center;gap:5px;overflow-x:auto;flex-shrink:0;scrollbar-width:none}
+.week-bar::-webkit-scrollbar{display:none}
+.week-pill{padding:4px 11px;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer;border:1px solid var(--border);background:transparent;color:var(--text-muted);white-space:nowrap;transition:all .12s;letter-spacing:.03em}
+.week-pill:hover{background:var(--border);color:var(--text)}
+.week-pill.active{background:var(--accent);border-color:var(--accent);color:#fff}
+.date-pill{padding:5px 12px;border-radius:20px;font-size:11.5px;font-weight:600;cursor:pointer;border:1px solid var(--border);background:transparent;color:var(--text-muted);white-space:nowrap;transition:all .12s}
+.date-pill:hover{background:var(--surface2);color:var(--text)}
+.date-pill.active{border-color:var(--accent);color:var(--text);background:var(--surface2)}
+.bar-label{font-size:10px;font-weight:600;letter-spacing:.08em;color:var(--text-dim);text-transform:uppercase;white-space:nowrap;margin-right:4px}
+
+/* INSIGHTS */
+.ins-bar{background:rgba(59,138,255,.05);border-bottom:1px solid var(--border);padding:6px 18px;display:flex;align-items:center;gap:18px;flex-shrink:0;font-size:11px;overflow-x:auto;scrollbar-width:none}
+.ins-bar::-webkit-scrollbar{display:none}
+.ins-lbl{font-size:9.5px;font-weight:600;letter-spacing:.08em;color:var(--text-dim);text-transform:uppercase;white-space:nowrap}
+.ins-val{font-weight:700;color:var(--text);font-variant-numeric:tabular-nums;margin-left:4px}
+.ins-sep{color:var(--text-dim)}
+
+/* CONTENT */
+.content{flex:1;overflow-y:auto;padding:16px 18px;scrollbar-width:thin;scrollbar-color:var(--border) transparent}
+
+/* KPI */
+.kpi-row{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:14px}
+.kpi{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px 16px;position:relative;overflow:hidden}
+.kpi::before{content:'';position:absolute;top:0;left:0;right:0;height:2px}
+.kpi.c1::before{background:linear-gradient(90deg,#3B8AFF,#00C8FF)}
+.kpi.c2::before{background:linear-gradient(90deg,#00C896,#00E5B0)}
+.kpi.c3::before{background:linear-gradient(90deg,#FF8C00,#FFB800)}
+.kpi-lbl{font-size:10px;font-weight:600;letter-spacing:.1em;color:var(--text-muted);text-transform:uppercase;margin-bottom:5px}
+.kpi-val{font-size:28px;font-weight:700;color:var(--text);font-variant-numeric:tabular-nums;line-height:1;margin-bottom:5px}
+.kpi-sub{font-size:10.5px;color:var(--text-muted);display:flex;align-items:center;gap:4px}
+.kd{font-weight:700;font-variant-numeric:tabular-nums}
+.kd.up{color:var(--up)}.kd.down{color:var(--down)}.kd.flat{color:var(--text-dim)}
+
+/* CLIENT CARDS */
+.sh{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;margin-top:2px}
+.sh-title{font-size:12.5px;font-weight:700;color:var(--text)}
+.sh-sub{font-size:10.5px;color:var(--text-muted)}
+.cc-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:18px}
+.cc{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:13px;transition:transform .12s}
+.cc:hover{transform:translateY(-1px)}
+.cc-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.cc-name{display:flex;align-items:center;gap:7px;font-size:12.5px;font-weight:700;color:var(--text)}
+.cc-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0}
+.cc-m{display:grid;grid-template-columns:1fr 1fr 1fr}
+.mc{padding:6px 0}
+.mc+.mc{border-left:1px solid var(--border);padding-left:8px}
+.mk{font-size:9px;font-weight:600;letter-spacing:.08em;color:var(--text-muted);text-transform:uppercase;margin-bottom:2px}
+.mv{font-size:18px;font-weight:700;color:var(--text);font-variant-numeric:tabular-nums;line-height:1.1}
+.md{font-size:10px;font-weight:600;font-variant-numeric:tabular-nums;margin-top:1px}
+.md.up{color:var(--up)}.md.down{color:var(--down)}.md.flat{color:var(--text-dim)}
+.cc-prev{margin-top:8px;padding-top:7px;border-top:1px solid var(--border);font-size:10px;color:var(--text-muted)}
+.cc-prev-lbl{font-weight:600;letter-spacing:.06em;color:var(--text-dim);text-transform:uppercase;margin-bottom:2px;font-size:9.5px}
+.cc-prev-vals{display:flex;gap:10px;font-variant-numeric:tabular-nums}
+
+/* TREND TABLE */
+.tw{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;margin-bottom:18px}
+.tw-top{display:flex;align-items:center;justify-content:space-between;padding:11px 14px;border-bottom:1px solid var(--border)}
+.tw-title{font-size:12.5px;font-weight:700;color:var(--text)}
+.mtabs{display:flex;gap:3px}
+.mtab{padding:4px 10px;border-radius:5px;font-size:10.5px;font-weight:600;cursor:pointer;border:1px solid var(--border);color:var(--text-muted);background:transparent;transition:all .12s}
+.mtab:hover{background:var(--border);color:var(--text)}
+.mtab.active{background:var(--accent);border-color:var(--accent);color:#fff}
+.ts{overflow-x:auto;scrollbar-width:thin;scrollbar-color:var(--border) transparent}
+table{width:100%;border-collapse:collapse;font-size:11.5px;font-variant-numeric:tabular-nums}
+thead th{padding:8px 12px;text-align:right;font-weight:600;color:var(--text-muted);letter-spacing:.05em;border-bottom:1px solid var(--border);white-space:nowrap;font-size:10px;background:var(--surface2)}
+thead th:first-child{text-align:left;position:sticky;left:0;background:var(--surface2);z-index:2;min-width:130px}
+thead th.fx{background:rgba(59,138,255,.09);border-left:2px solid rgba(59,138,255,.2)}
+tbody td{padding:8px 12px;text-align:right;border-bottom:1px solid var(--border);white-space:nowrap;color:var(--text)}
+tbody td:first-child{text-align:left;position:sticky;left:0;background:var(--surface);z-index:1;font-weight:600}
+tbody tr:hover td{background:var(--surface2)}
+tbody tr:hover td:first-child{background:var(--surface2)}
+tbody tr.tr{border-bottom:2px solid var(--border)}
+tbody tr.tr td{font-weight:700}
+tbody td.fx{background:rgba(59,138,255,.04);border-left:2px solid rgba(59,138,255,.12)}
+tbody tr:hover td.fx{background:rgba(59,138,255,.09)}
+.cd{font-size:9px;font-weight:600;margin-left:3px}
+.cd.up{color:var(--up)}.cd.down{color:var(--down)}
+.cname{display:flex;align-items:center;gap:7px}
+.cdot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+.att{font-size:11.5px;font-weight:700}
+.att-hi{color:var(--down)}.att-ok{color:var(--up)}.att-mid{color:#FFC400}
+.fx-lbl{font-size:8.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--accent);opacity:.75}
+
+/* WEEKLY SUMMARY VIEW */
+.ws-grid{display:flex;flex-direction:column;gap:16px}
+.ws-table-block{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden}
+.ws-hdr{padding:11px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px}
+.ws-icon{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.ws-title{font-size:12.5px;font-weight:700;color:var(--text)}
+.ws-sub{font-size:10.5px;color:var(--text-muted);margin-left:auto}
+
+/* REVENUE VIEW */
+.rev-view{display:flex;flex-direction:column;gap:14px}
+.rev-summary{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.rev-bar-wrap{position:relative;height:6px;background:var(--surface2);border-radius:3px;overflow:hidden;margin-top:4px}
+.rev-bar{height:100%;border-radius:3px;transition:width .4s ease}
+.rev-cell{text-align:right}
+.rev-amt{font-size:12px;font-weight:700;font-variant-numeric:tabular-nums}
+.rev-amt.pending{color:var(--text-dim);font-size:10px;font-style:italic}
+.rev-total-row td{font-weight:700;border-top:2px solid var(--border)}
+
+/* CITY VIEW */
+.city-hero{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px 18px;margin-bottom:14px;display:flex;align-items:center;gap:14px}
+.city-icon{width:36px;height:36px;border-radius:8px;background:rgba(59,138,255,.15);display:flex;align-items:center;justify-content:center}
+.city-name{font-size:18px;font-weight:700;color:var(--text)}
+.city-zone{font-size:11px;color:var(--text-muted);margin-top:2px}
+.city-stats{margin-left:auto;display:flex;gap:24px;font-variant-numeric:tabular-nums}
+.city-stat{text-align:right}
+.city-stat-val{font-size:20px;font-weight:700;color:var(--text)}
+.city-stat-lbl{font-size:9.5px;color:var(--text-muted);letter-spacing:.08em;text-transform:uppercase}
+
+/* FOOTER */
+.footer{padding:6px 18px;font-size:10px;color:var(--text-dim);border-top:1px solid var(--border);display:flex;align-items:center;gap:5px;flex-shrink:0;background:var(--surface)}
+.fdot{width:5px;height:5px;border-radius:50%;background:var(--up)}
+/* EXEC VIEW */
+#exec-view{display:none;overflow-y:auto;flex:1;background:#07111e;color:#e5e9f0}
+#exec-view.active{display:block}
+/* FR PERFORMANCE VIEW */
+#fr-view{display:none;overflow-y:auto;flex:1;padding:16px 18px;background:var(--bg)}
+#fr-view.active{display:block}
+/* TL WISE TREND VIEW */
+#tltrend-view{display:none;overflow-y:auto;flex:1;padding:16px 18px;background:var(--bg)}
+#tltrend-view.active{display:block}
+.slab-badge{display:inline-block;padding:2px 9px;border-radius:20px;font-size:10px;font-weight:700;letter-spacing:.02em;white-space:nowrap}
+.slab-top{background:rgba(0,200,150,.15);color:var(--up)}
+.slab-avg{background:rgba(255,196,0,.16);color:#FFC400}
+.slab-bottom{background:rgba(255,77,106,.15);color:var(--down)}
+.fr-tl-filter{padding:4px 10px;border-radius:6px;font-size:10.5px;font-weight:600;cursor:pointer;border:1px solid var(--border);color:var(--text-muted);background:transparent;transition:all .12s}
+.fr-tl-filter:hover{background:var(--border);color:var(--text)}
+.fr-tl-filter.active{background:var(--accent);border-color:var(--accent);color:#fff}
+.fr-th-sort{cursor:pointer;user-select:none}
+.fr-th-sort:hover{color:var(--text)}
+.fr-note{font-size:10.5px;color:var(--text-muted);padding:8px 14px;border-top:1px solid var(--border);background:var(--surface2)}
+</style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<aside class="sb">
+  <div class="sb-logo">
+    <div class="logo-row">
+      <div class="logo-box">L</div>
+      <div><div class="logo-name">LOADSHARE</div><div class="logo-sub">QC OPS</div></div>
+    </div>
+  </div>
+  <nav class="sb-nav">
+    <div class="nl">Dashboards</div>
+    <div class="ni active" onclick="setView('client',this)">
+      <svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="1" y="1" width="5" height="5" rx="1"/><rect x="8" y="1" width="5" height="5" rx="1"/><rect x="1" y="8" width="5" height="5" rx="1"/><rect x="8" y="8" width="5" height="5" rx="1"/></svg>
+      Client Dashboard
+    </div>
+    <div class="ni" onclick="setView('city',this)">
+      <svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M7 1l1.5 3.5H13L9.5 7l1.5 4L7 9 3 11l1.5-4L1 4.5h4.5z"/></svg>
+      City Dashboard
+    </div>
+    <div class="ni" onclick="setView('weekly',this)">
+      <svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="1" y="2" width="12" height="10" rx="1"/><line x1="1" y1="5" x2="13" y2="5"/><line x1="4" y1="2" x2="4" y2="12"/></svg>
+      Weekly Summary
+    </div>
+    <div class="ni" onclick="setView('revenue',this)">
+      <svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="1,11 4,6 7,9 11,3 13,3"/><circle cx="13" cy="3" r="1" fill="currentColor"/></svg>
+      Revenue Tracker
+    </div>
+    <div class="ni" onclick="setView('exec',this)">
+      <svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="1" y="1" width="12" height="12" rx="1.5"/><line x1="3.5" y1="4.5" x2="10.5" y2="4.5"/><line x1="3.5" y1="7" x2="10.5" y2="7"/><line x1="3.5" y1="9.5" x2="7.5" y2="9.5"/></svg>
+      📋 Exec Summary
+    </div>
+    <div class="ni" onclick="setView('fr',this)">
+      <svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="7" cy="4.3" r="2.3"/><path d="M2.3 12.5c0-2.6 2.1-4.7 4.7-4.7s4.7 2.1 4.7 4.7"/></svg>
+      FR Performance
+    </div>
+    <div class="ni" onclick="setView('tltrend',this)">
+      <svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="1,10 5,6 8,8.5 13,3"/><circle cx="5" cy="6" r="1" fill="currentColor"/><circle cx="8" cy="8.5" r="1" fill="currentColor"/><circle cx="13" cy="3" r="1" fill="currentColor"/></svg>
+      TL Wise Trend
+    </div>
+
+    <div class="sb-filters" style="padding-top:10px">
+      <div class="nl">Zone Filter</div>
+      <select class="sb-sel" id="zoneSelect" onchange="applyFilters()">
+        <option value="">All Zones</option>
+        <option value="North">North</option>
+        <option value="South">South</option>
+        <option value="East">East</option>
+        <option value="West">West</option>
+      </select>
+      <div class="nl">City Filter</div>
+      <select class="sb-sel" id="citySelect" onchange="applyFilters()">
+        <option value="">All Cities</option>
+      </select>
+    </div>
+  </nav>
+  <div class="sb-footer">
+    <div style="font-size:11px;color:rgba(255,255,255,.6);font-weight:600"><span class="live-dot"></span>Live · Manual refresh</div>
+    <div style="font-size:10px;color:rgba(255,255,255,.25);margin-top:2px;padding-left:11px">Master Tracker · <span id="ts"></span></div>
+  </div>
+</aside>
+
+<!-- MAIN -->
+<main class="main">
+  <div class="topbar">
+    <span class="tb-title" id="viewTitle">QC Dashboard — LSN</span>
+    <div class="vtab-group" style="display:flex;gap:4px" id="viewToggle">
+      <button class="vtab active" onclick="setDayWeek('daily',this)">Daily</button>
+      <button class="vtab" onclick="setDayWeek('weekly',this)">Weekly</button>
+    </div>
+    <button class="theme-btn" onclick="toggleTheme()">☀/☾</button>
+  </div>
+
+  <!-- DATE BAR (top row) -->
+  <div class="date-bar" id="dateBar"></div>
+  <!-- WEEK BAR (below dates) -->
+  <div class="week-bar" id="weekBar"></div>
+
+  <!-- INSIGHTS -->
+  <div class="ins-bar" id="insBar">
+    <span class="ins-lbl">📡 Insights</span>
+    <span><span class="ins-lbl">OPD Δ</span><span class="ins-val" id="ins-dod">—</span></span>
+    <span class="ins-sep">·</span>
+    <span><span class="ins-lbl">Top Client</span><span class="ins-val" id="ins-top">—</span></span>
+    <span class="ins-sep">·</span>
+    <span><span class="ins-lbl">Biggest Gain</span><span class="ins-val" id="ins-gain" style="color:var(--up)">—</span></span>
+    <span class="ins-sep">·</span>
+    <span><span class="ins-lbl">Biggest Drop</span><span class="ins-val" id="ins-drop" style="color:var(--down)">—</span></span>
+    <span class="ins-sep">·</span>
+    <span><span class="ins-lbl">View</span><span class="ins-val" id="ins-filter" style="color:var(--accent)">All India</span></span>
+  </div>
+
+  <!-- CONTENT AREA -->
+  <div class="content" id="contentArea"></div>
+  <!-- EXEC VIEW -->
+  <div id="exec-view"></div>
+  <!-- FR PERFORMANCE VIEW -->
+  <div id="fr-view"></div>
+  <!-- TL WISE TREND VIEW -->
+  <div id="tltrend-view"></div>
+
+  <div class="footer">
+    <div class="fdot"></div>
+    Source: Master Tracker — Daily_Overall_Data · Weekly Client_Wise · Attrition Tracker · Weekly Payout_Data · Updated <span id="ts2"></span>
+  </div>
+</main>
+
+<script>
+// ══════════════════════════════════════════════════════════════════════
+// DATA
+// ══════════════════════════════════════════════════════════════════════
+const DAILY_RAW = [
+{"date":"16-Jun-2026","client":"Rapido","opd":12154,"dau":1614,"fod":36},{"date":"17-Jun-2026","client":"Rapido","opd":12387,"dau":1586,"fod":43},{"date":"18-Jun-2026","client":"Rapido","opd":12229,"dau":1583,"fod":32},{"date":"19-Jun-2026","client":"Rapido","opd":12854,"dau":1629,"fod":41},{"date":"20-Jun-2026","client":"Rapido","opd":11226,"dau":1536,"fod":31},{"date":"21-Jun-2026","client":"Rapido","opd":9327,"dau":1305,"fod":24},{"date":"22-Jun-2026","client":"Rapido","opd":12637,"dau":1579,"fod":23},{"date":"23-Jun-2026","client":"Rapido","opd":11849,"dau":1545,"fod":38},{"date":"24-Jun-2026","client":"Rapido","opd":12560,"dau":1614,"fod":34},{"date":"25-Jun-2026","client":"Rapido","opd":12091,"dau":1581,"fod":20},{"date":"26-Jun-2026","client":"Rapido","opd":11389,"dau":1533,"fod":21},{"date":"27-Jun-2026","client":"Rapido","opd":10710,"dau":1486,"fod":22},{"date":"28-Jun-2026","client":"Rapido","opd":8634,"dau":1204,"fod":11},{"date":"29-Jun-2026","client":"Rapido","opd":11817,"dau":1524,"fod":27},{"date":"30-Jun-2026","client":"Rapido","opd":12185,"dau":1580,"fod":30},{"date":"1-Jul-2026","client":"Rapido","opd":14746,"dau":1799,"fod":38},{"date":"2-Jul-2026","client":"Rapido","opd":13003,"dau":1696,"fod":32},{"date":"3-Jul-2026","client":"Rapido","opd":11749,"dau":1563,"fod":26},{"date":"4-Jul-2026","client":"Rapido","opd":9990,"dau":1364,"fod":23},{"date":"5-Jul-2026","client":"Rapido","opd":10018,"dau":1436,"fod":24},{"date":"6-Jul-2026","client":"Rapido","opd":12053,"dau":1600,"fod":29},{"date":"7-Jul-2026","client":"Rapido","opd":11849,"dau":1555,"fod":28},{"date":"8-Jul-2026","client":"Rapido","opd":4956,"dau":748,"fod":13},{"date":"9-Jul-2026","client":"Rapido","opd":4852,"dau":726,"fod":14},{"date":"10-Jul-2026","client":"Rapido","opd":5704,"dau":834,"fod":14},{"date":"11-Jul-2026","client":"Rapido","opd":4972,"dau":731,"fod":11},{"date":"12-Jul-2026","client":"Rapido","opd":4175,"dau":672,"fod":11},{"date":"13-Jul-2026","client":"Rapido","opd":12743,"dau":1573,"fod":33},{"date":"14-Jul-2026","client":"Rapido","opd":12586,"dau":1579,"fod":34},{"date":"15-Jul-2026","client":"Rapido","opd":13046,"dau":1613,"fod":36},{"date":"16-Jul-2026","client":"Rapido","opd":12741,"dau":1749,"fod":72},{"date":"17-Jul-2026","client":"Rapido","opd":12409,"dau":1676,"fod":53},{"date":"18-Jul-2026","client":"Rapido","opd":11511,"dau":1624,"fod":57},{"date":"19-Jul-2026","client":"Rapido","opd":9704,"dau":1379,"fod":31},{"date":"20-Jul-2026","client":"Rapido","opd":10563,"dau":1488,"fod":28},{"date":"21-Jul-2026","client":"Rapido","opd":9984,"dau":1515,"fod":37},{"date":"22-Jul-2026","client":"Rapido","opd":9575,"dau":1470,"fod":42},{"date":"23-Jul-2026","client":"Rapido","opd":9823,"dau":1483,"fod":28},{"date":"24-Jul-2026","client":"Rapido","opd":11627,"dau":1636,"fod":47},{"date":"25-Jul-2026","client":"Rapido","opd":10562,"dau":1544,"fod":42},{"date":"26-Jul-2026","client":"Rapido","opd":8741,"dau":1342,"fod":41},{"date":"27-Jul-2026","client":"Rapido","opd":12874,"dau":1918,"fod":91},{"date":"28-Jul-2026","client":"Rapido","opd":11982,"dau":1915,"fod":83},{"date":"29-Jul-2026","client":"Rapido","opd":13591,"dau":1966,"fod":57},{"date":"30-Jul-2026","client":"Rapido","opd":12499,"dau":1935,"fod":49},{"date":"31-Jul-2026","client":"Rapido","opd":12236,"dau":1752,"fod":38},{"date":"1-Aug-2026","client":"Rapido","opd":11584,"dau":1763,"fod":40},{"date":"2-Aug-2026","client":"Rapido","opd":9451,"dau":1513,"fod":33},{"date":"3-Aug-2026","client":"Rapido","opd":12502,"dau":1850,"fod":47},{"date":"4-Aug-2026","client":"Rapido","opd":12312,"dau":1868,"fod":50},{"date":"5-Aug-2026","client":"Rapido","opd":11675,"dau":1745,"fod":50},{"date":"6-Aug-2026","client":"Rapido","opd":10714,"dau":1736,"fod":44},{"date":"7-Aug-2026","client":"Rapido","opd":9798,"dau":1628,"fod":36},{"date":"8-Aug-2026","client":"Rapido","opd":10835,"dau":1676,"fod":31},{"date":"9-Aug-2026","client":"Rapido","opd":9482,"dau":1452,"fod":35},{"date":"10-Aug-2026","client":"Rapido","opd":10881,"dau":1591,"fod":8},{"date":"11-Aug-2026","client":"Rapido","opd":10004,"dau":1583,"fod":33},{"date":"12-Aug-2026","client":"Rapido","opd":12043,"dau":1765,"fod":39},
+{"date":"16-Jun-2026","client":"Blinkit","opd":10856,"dau":640,"fod":40},{"date":"17-Jun-2026","client":"Blinkit","opd":11294,"dau":652,"fod":45},{"date":"18-Jun-2026","client":"Blinkit","opd":11163,"dau":646,"fod":39},{"date":"19-Jun-2026","client":"Blinkit","opd":12081,"dau":677,"fod":47},{"date":"20-Jun-2026","client":"Blinkit","opd":11688,"dau":665,"fod":42},{"date":"21-Jun-2026","client":"Blinkit","opd":10019,"dau":605,"fod":35},{"date":"22-Jun-2026","client":"Blinkit","opd":11672,"dau":661,"fod":43},{"date":"23-Jun-2026","client":"Blinkit","opd":11601,"dau":659,"fod":44},{"date":"24-Jun-2026","client":"Blinkit","opd":12058,"dau":675,"fod":47},{"date":"25-Jun-2026","client":"Blinkit","opd":12091,"dau":676,"fod":46},{"date":"26-Jun-2026","client":"Blinkit","opd":11923,"dau":672,"fod":44},{"date":"27-Jun-2026","client":"Blinkit","opd":11590,"dau":659,"fod":42},{"date":"28-Jun-2026","client":"Blinkit","opd":9738,"dau":587,"fod":33},{"date":"29-Jun-2026","client":"Blinkit","opd":11907,"dau":669,"fod":44},{"date":"30-Jun-2026","client":"Blinkit","opd":12202,"dau":682,"fod":48},{"date":"1-Jul-2026","client":"Blinkit","opd":13170,"dau":718,"fod":52},{"date":"2-Jul-2026","client":"Blinkit","opd":12341,"dau":688,"fod":48},{"date":"3-Jul-2026","client":"Blinkit","opd":11695,"dau":663,"fod":44},{"date":"4-Jul-2026","client":"Blinkit","opd":9821,"dau":591,"fod":36},{"date":"5-Jul-2026","client":"Blinkit","opd":10437,"dau":617,"fod":40},{"date":"6-Jul-2026","client":"Blinkit","opd":11921,"dau":668,"fod":46},{"date":"7-Jul-2026","client":"Blinkit","opd":12010,"dau":673,"fod":47},{"date":"8-Jul-2026","client":"Blinkit","opd":12178,"dau":678,"fod":47},{"date":"9-Jul-2026","client":"Blinkit","opd":12970,"dau":710,"fod":51},{"date":"10-Jul-2026","client":"Blinkit","opd":13682,"dau":740,"fod":54},{"date":"11-Jul-2026","client":"Blinkit","opd":14737,"dau":786,"fod":60},{"date":"12-Jul-2026","client":"Blinkit","opd":15597,"dau":822,"fod":64},{"date":"13-Jul-2026","client":"Blinkit","opd":13068,"dau":720,"fod":52},{"date":"14-Jul-2026","client":"Blinkit","opd":13245,"dau":726,"fod":53},{"date":"15-Jul-2026","client":"Blinkit","opd":12934,"dau":715,"fod":52},{"date":"16-Jul-2026","client":"Blinkit","opd":13294,"dau":711,"fod":21},{"date":"17-Jul-2026","client":"Blinkit","opd":13209,"dau":703,"fod":17},{"date":"18-Jul-2026","client":"Blinkit","opd":14729,"dau":781,"fod":18},{"date":"19-Jul-2026","client":"Blinkit","opd":16223,"dau":754,"fod":5},{"date":"20-Jul-2026","client":"Blinkit","opd":12280,"dau":682,"fod":13},{"date":"21-Jul-2026","client":"Blinkit","opd":12943,"dau":682,"fod":9},{"date":"22-Jul-2026","client":"Blinkit","opd":12716,"dau":721,"fod":10},{"date":"23-Jul-2026","client":"Blinkit","opd":13426,"dau":775,"fod":16},{"date":"24-Jul-2026","client":"Blinkit","opd":14015,"dau":776,"fod":15},{"date":"25-Jul-2026","client":"Blinkit","opd":15559,"dau":815,"fod":18},{"date":"26-Jul-2026","client":"Blinkit","opd":16308,"dau":767,"fod":3},{"date":"27-Jul-2026","client":"Blinkit","opd":13092,"dau":727,"fod":19},{"date":"28-Jul-2026","client":"Blinkit","opd":13653,"dau":742,"fod":17},{"date":"29-Jul-2026","client":"Blinkit","opd":13547,"dau":726,"fod":15},{"date":"30-Jul-2026","client":"Blinkit","opd":13725,"dau":759,"fod":22},{"date":"31-Jul-2026","client":"Blinkit","opd":13961,"dau":772,"fod":18},{"date":"1-Aug-2026","client":"Blinkit","opd":16044,"dau":791,"fod":13},{"date":"2-Aug-2026","client":"Blinkit","opd":17872,"dau":787,"fod":8},{"date":"3-Aug-2026","client":"Blinkit","opd":14571,"dau":743,"fod":19},{"date":"4-Aug-2026","client":"Blinkit","opd":14036,"dau":759,"fod":28},{"date":"5-Aug-2026","client":"Blinkit","opd":14619,"dau":767,"fod":18},{"date":"6-Aug-2026","client":"Blinkit","opd":14441,"dau":766,"fod":21},{"date":"7-Aug-2026","client":"Blinkit","opd":14315,"dau":757,"fod":8},{"date":"8-Aug-2026","client":"Blinkit","opd":16386,"dau":790,"fod":11},{"date":"9-Aug-2026","client":"Blinkit","opd":18475,"dau":791,"fod":8},{"date":"10-Aug-2026","client":"Blinkit","opd":14659,"dau":724,"fod":18},{"date":"11-Aug-2026","client":"Blinkit","opd":15227,"dau":762,"fod":13},{"date":"12-Aug-2026","client":"Blinkit","opd":14109,"dau":721,"fod":9},
+{"date":"16-Jun-2026","client":"Zepto","opd":22481,"dau":1023,"fod":28},{"date":"17-Jun-2026","client":"Zepto","opd":23564,"dau":1058,"fod":31},{"date":"18-Jun-2026","client":"Zepto","opd":23012,"dau":1040,"fod":29},{"date":"19-Jun-2026","client":"Zepto","opd":24892,"dau":1103,"fod":35},{"date":"20-Jun-2026","client":"Zepto","opd":24036,"dau":1075,"fod":33},{"date":"21-Jun-2026","client":"Zepto","opd":20178,"dau":935,"fod":27},{"date":"22-Jun-2026","client":"Zepto","opd":24145,"dau":1081,"fod":34},{"date":"23-Jun-2026","client":"Zepto","opd":23892,"dau":1072,"fod":33},{"date":"24-Jun-2026","client":"Zepto","opd":25104,"dau":1114,"fod":37},{"date":"25-Jun-2026","client":"Zepto","opd":25231,"dau":1118,"fod":37},{"date":"26-Jun-2026","client":"Zepto","opd":24687,"dau":1100,"fod":36},{"date":"27-Jun-2026","client":"Zepto","opd":23908,"dau":1073,"fod":34},{"date":"28-Jun-2026","client":"Zepto","opd":19472,"dau":903,"fod":27},{"date":"29-Jun-2026","client":"Zepto","opd":24210,"dau":1083,"fod":34},{"date":"30-Jun-2026","client":"Zepto","opd":25108,"dau":1115,"fod":37},{"date":"1-Jul-2026","client":"Zepto","opd":30551,"dau":1301,"fod":48},{"date":"2-Jul-2026","client":"Zepto","opd":28731,"dau":1235,"fod":45},{"date":"3-Jul-2026","client":"Zepto","opd":26984,"dau":1170,"fod":42},{"date":"4-Jul-2026","client":"Zepto","opd":22617,"dau":1004,"fod":34},{"date":"5-Jul-2026","client":"Zepto","opd":23891,"dau":1051,"fod":37},{"date":"6-Jul-2026","client":"Zepto","opd":27432,"dau":1183,"fod":43},{"date":"7-Jul-2026","client":"Zepto","opd":27892,"dau":1199,"fod":44},{"date":"8-Jul-2026","client":"Zepto","opd":29840,"dau":1271,"fod":47},{"date":"9-Jul-2026","client":"Zepto","opd":29152,"dau":1249,"fod":46},{"date":"10-Jul-2026","client":"Zepto","opd":30344,"dau":1292,"fod":48},{"date":"11-Jul-2026","client":"Zepto","opd":32708,"dau":1378,"fod":53},{"date":"12-Jul-2026","client":"Zepto","opd":34492,"dau":1440,"fod":57},{"date":"13-Jul-2026","client":"Zepto","opd":31551,"dau":1333,"fod":50},{"date":"14-Jul-2026","client":"Zepto","opd":31649,"dau":1336,"fod":50},{"date":"15-Jul-2026","client":"Zepto","opd":30709,"dau":1302,"fod":48},{"date":"16-Jul-2026","client":"Zepto","opd":30370,"dau":1339,"fod":23},{"date":"17-Jul-2026","client":"Zepto","opd":31114,"dau":1384,"fod":25},{"date":"18-Jul-2026","client":"Zepto","opd":33894,"dau":1463,"fod":31},{"date":"19-Jul-2026","client":"Zepto","opd":35984,"dau":1426,"fod":16},{"date":"20-Jul-2026","client":"Zepto","opd":32260,"dau":1406,"fod":30},{"date":"21-Jul-2026","client":"Zepto","opd":31696,"dau":1428,"fod":39},{"date":"22-Jul-2026","client":"Zepto","opd":31082,"dau":1456,"fod":30},{"date":"23-Jul-2026","client":"Zepto","opd":31155,"dau":1491,"fod":34},{"date":"24-Jul-2026","client":"Zepto","opd":31682,"dau":1496,"fod":24},{"date":"25-Jul-2026","client":"Zepto","opd":35534,"dau":1590,"fod":36},{"date":"26-Jul-2026","client":"Zepto","opd":35414,"dau":1510,"fod":17},{"date":"27-Jul-2026","client":"Zepto","opd":33178,"dau":1495,"fod":36},{"date":"28-Jul-2026","client":"Zepto","opd":33978,"dau":1500,"fod":18},{"date":"29-Jul-2026","client":"Zepto","opd":33338,"dau":1534,"fod":38},{"date":"30-Jul-2026","client":"Zepto","opd":33507,"dau":1544,"fod":30},{"date":"31-Jul-2026","client":"Zepto","opd":33668,"dau":1524,"fod":21},{"date":"1-Aug-2026","client":"Zepto","opd":36331,"dau":1583,"fod":27},{"date":"2-Aug-2026","client":"Zepto","opd":39195,"dau":1515,"fod":11},{"date":"3-Aug-2026","client":"Zepto","opd":35807,"dau":1478,"fod":35},{"date":"4-Aug-2026","client":"Zepto","opd":33442,"dau":1488,"fod":30},{"date":"5-Aug-2026","client":"Zepto","opd":33245,"dau":1495,"fod":29},{"date":"6-Aug-2026","client":"Zepto","opd":33724,"dau":1501,"fod":26},{"date":"7-Aug-2026","client":"Zepto","opd":32264,"dau":1503,"fod":36},{"date":"8-Aug-2026","client":"Zepto","opd":35077,"dau":1548,"fod":16},{"date":"9-Aug-2026","client":"Zepto","opd":36358,"dau":1448,"fod":10},{"date":"10-Aug-2026","client":"Zepto","opd":33187,"dau":1392,"fod":25},{"date":"11-Aug-2026","client":"Zepto","opd":32869,"dau":1426,"fod":25},{"date":"12-Aug-2026","client":"Zepto","opd":32029,"dau":1424,"fod":30},
+{"date":"16-Jun-2026","client":"FK Minutes","opd":7892,"dau":548,"fod":22},{"date":"17-Jun-2026","client":"FK Minutes","opd":8241,"dau":565,"fod":24},{"date":"18-Jun-2026","client":"FK Minutes","opd":8102,"dau":559,"fod":23},{"date":"19-Jun-2026","client":"FK Minutes","opd":8876,"dau":598,"fod":26},{"date":"20-Jun-2026","client":"FK Minutes","opd":8567,"dau":584,"fod":25},{"date":"21-Jun-2026","client":"FK Minutes","opd":7234,"dau":515,"fod":20},{"date":"22-Jun-2026","client":"FK Minutes","opd":8634,"dau":588,"fod":25},{"date":"23-Jun-2026","client":"FK Minutes","opd":8512,"dau":582,"fod":24},{"date":"24-Jun-2026","client":"FK Minutes","opd":8945,"dau":608,"fod":27},{"date":"25-Jun-2026","client":"FK Minutes","opd":9012,"dau":612,"fod":27},{"date":"26-Jun-2026","client":"FK Minutes","opd":8876,"dau":604,"fod":26},{"date":"27-Jun-2026","client":"FK Minutes","opd":8523,"dau":581,"fod":25},{"date":"28-Jun-2026","client":"FK Minutes","opd":6891,"dau":492,"fod":19},{"date":"29-Jun-2026","client":"FK Minutes","opd":8734,"dau":594,"fod":26},{"date":"30-Jun-2026","client":"FK Minutes","opd":9123,"dau":619,"fod":28},{"date":"1-Jul-2026","client":"FK Minutes","opd":10699,"dau":703,"fod":33},{"date":"2-Jul-2026","client":"FK Minutes","opd":10012,"dau":665,"fod":31},{"date":"3-Jul-2026","client":"FK Minutes","opd":9234,"dau":622,"fod":28},{"date":"4-Jul-2026","client":"FK Minutes","opd":7823,"dau":538,"fod":23},{"date":"5-Jul-2026","client":"FK Minutes","opd":8301,"dau":567,"fod":25},{"date":"6-Jul-2026","client":"FK Minutes","opd":9562,"dau":641,"fod":29},{"date":"7-Jul-2026","client":"FK Minutes","opd":9834,"dau":657,"fod":30},{"date":"8-Jul-2026","client":"FK Minutes","opd":11647,"dau":752,"fod":36},{"date":"9-Jul-2026","client":"FK Minutes","opd":12249,"dau":782,"fod":39},{"date":"10-Jul-2026","client":"FK Minutes","opd":12128,"dau":776,"fod":38},{"date":"11-Jul-2026","client":"FK Minutes","opd":12768,"dau":810,"fod":41},{"date":"12-Jul-2026","client":"FK Minutes","opd":13682,"dau":858,"fod":45},{"date":"13-Jul-2026","client":"FK Minutes","opd":11576,"dau":738,"fod":37},{"date":"14-Jul-2026","client":"FK Minutes","opd":11519,"dau":735,"fod":37},{"date":"15-Jul-2026","client":"FK Minutes","opd":11389,"dau":728,"fod":36},{"date":"16-Jul-2026","client":"FK Minutes","opd":11706,"dau":720,"fod":14},{"date":"17-Jul-2026","client":"FK Minutes","opd":11447,"dau":723,"fod":13},{"date":"18-Jul-2026","client":"FK Minutes","opd":12195,"dau":776,"fod":17},{"date":"19-Jul-2026","client":"FK Minutes","opd":13615,"dau":742,"fod":8},{"date":"20-Jul-2026","client":"FK Minutes","opd":10429,"dau":633,"fod":10},{"date":"21-Jul-2026","client":"FK Minutes","opd":10889,"dau":663,"fod":15},{"date":"22-Jul-2026","client":"FK Minutes","opd":11070,"dau":728,"fod":18},{"date":"23-Jul-2026","client":"FK Minutes","opd":11386,"dau":719,"fod":18},{"date":"24-Jul-2026","client":"FK Minutes","opd":11639,"dau":708,"fod":13},{"date":"25-Jul-2026","client":"FK Minutes","opd":12031,"dau":737,"fod":7},{"date":"26-Jul-2026","client":"FK Minutes","opd":13379,"dau":732,"fod":3},{"date":"27-Jul-2026","client":"FK Minutes","opd":10934,"dau":669,"fod":19},{"date":"28-Jul-2026","client":"FK Minutes","opd":11456,"dau":717,"fod":16},{"date":"29-Jul-2026","client":"FK Minutes","opd":11594,"dau":709,"fod":15},{"date":"30-Jul-2026","client":"FK Minutes","opd":12033,"dau":735,"fod":12},{"date":"31-Jul-2026","client":"FK Minutes","opd":12501,"dau":750,"fod":7},{"date":"1-Aug-2026","client":"FK Minutes","opd":13674,"dau":779,"fod":12},{"date":"2-Aug-2026","client":"FK Minutes","opd":15407,"dau":767,"fod":9},{"date":"3-Aug-2026","client":"FK Minutes","opd":12294,"dau":681,"fod":14},{"date":"4-Aug-2026","client":"FK Minutes","opd":12547,"dau":705,"fod":16},{"date":"5-Aug-2026","client":"FK Minutes","opd":12391,"dau":727,"fod":11},{"date":"6-Aug-2026","client":"FK Minutes","opd":13212,"dau":759,"fod":14},{"date":"7-Aug-2026","client":"FK Minutes","opd":13833,"dau":801,"fod":9},{"date":"8-Aug-2026","client":"FK Minutes","opd":15039,"dau":811,"fod":15},{"date":"9-Aug-2026","client":"FK Minutes","opd":16448,"dau":805,"fod":14},{"date":"10-Aug-2026","client":"FK Minutes","opd":13153,"dau":740,"fod":20},{"date":"11-Aug-2026","client":"FK Minutes","opd":13553,"dau":746,"fod":18},{"date":"12-Aug-2026","client":"FK Minutes","opd":13795,"dau":781,"fod":21},
+{"date":"16-Jun-2026","client":"BB Now","opd":5234,"dau":356,"fod":15},{"date":"17-Jun-2026","client":"BB Now","opd":5456,"dau":368,"fod":16},{"date":"18-Jun-2026","client":"BB Now","opd":5312,"dau":360,"fod":15},{"date":"19-Jun-2026","client":"BB Now","opd":5789,"dau":387,"fod":18},{"date":"20-Jun-2026","client":"BB Now","opd":5601,"dau":376,"fod":17},{"date":"21-Jun-2026","client":"BB Now","opd":4712,"dau":327,"fod":14},{"date":"22-Jun-2026","client":"BB Now","opd":5634,"dau":378,"fod":17},{"date":"23-Jun-2026","client":"BB Now","opd":5567,"dau":374,"fod":17},{"date":"24-Jun-2026","client":"BB Now","opd":5834,"dau":390,"fod":18},{"date":"25-Jun-2026","client":"BB Now","opd":5891,"dau":393,"fod":18},{"date":"26-Jun-2026","client":"BB Now","opd":5756,"dau":386,"fod":18},{"date":"27-Jun-2026","client":"BB Now","opd":5512,"dau":372,"fod":16},{"date":"28-Jun-2026","client":"BB Now","opd":4523,"dau":314,"fod":13},{"date":"29-Jun-2026","client":"BB Now","opd":5634,"dau":378,"fod":17},{"date":"30-Jun-2026","client":"BB Now","opd":5823,"dau":389,"fod":18},{"date":"1-Jul-2026","client":"BB Now","opd":11850,"dau":602,"fod":36},{"date":"2-Jul-2026","client":"BB Now","opd":10981,"dau":564,"fod":33},{"date":"3-Jul-2026","client":"BB Now","opd":9872,"dau":516,"fod":29},{"date":"4-Jul-2026","client":"BB Now","opd":8134,"dau":438,"fod":24},{"date":"5-Jul-2026","client":"BB Now","opd":8612,"dau":460,"fod":26},{"date":"6-Jul-2026","client":"BB Now","opd":10023,"dau":522,"fod":31},{"date":"7-Jul-2026","client":"BB Now","opd":10234,"dau":531,"fod":32},{"date":"8-Jul-2026","client":"BB Now","opd":8971,"dau":474,"fod":27},{"date":"9-Jul-2026","client":"BB Now","opd":9023,"dau":476,"fod":28},{"date":"10-Jul-2026","client":"BB Now","opd":8977,"dau":474,"fod":27},{"date":"11-Jul-2026","client":"BB Now","opd":10118,"dau":524,"fod":31},{"date":"12-Jul-2026","client":"BB Now","opd":11175,"dau":571,"fod":35},{"date":"13-Jul-2026","client":"BB Now","opd":9535,"dau":498,"fod":29},{"date":"14-Jul-2026","client":"BB Now","opd":9491,"dau":496,"fod":29},{"date":"15-Jul-2026","client":"BB Now","opd":9545,"dau":498,"fod":29},{"date":"16-Jul-2026","client":"BB Now","opd":9195,"dau":494,"fod":11},{"date":"17-Jul-2026","client":"BB Now","opd":8729,"dau":490,"fod":8},{"date":"18-Jul-2026","client":"BB Now","opd":9470,"dau":500,"fod":8},{"date":"19-Jul-2026","client":"BB Now","opd":10906,"dau":501,"fod":2},{"date":"20-Jul-2026","client":"BB Now","opd":8418,"dau":468,"fod":6},{"date":"21-Jul-2026","client":"BB Now","opd":8280,"dau":488,"fod":10},{"date":"22-Jul-2026","client":"BB Now","opd":8167,"dau":481,"fod":7},{"date":"23-Jul-2026","client":"BB Now","opd":8108,"dau":479,"fod":13},{"date":"24-Jul-2026","client":"BB Now","opd":7876,"dau":481,"fod":18},{"date":"25-Jul-2026","client":"BB Now","opd":9152,"dau":510,"fod":9},{"date":"26-Jul-2026","client":"BB Now","opd":10105,"dau":487,"fod":2},{"date":"27-Jul-2026","client":"BB Now","opd":7750,"dau":468,"fod":7},{"date":"28-Jul-2026","client":"BB Now","opd":8419,"dau":488,"fod":9},{"date":"29-Jul-2026","client":"BB Now","opd":8652,"dau":502,"fod":13},{"date":"30-Jul-2026","client":"BB Now","opd":8333,"dau":499,"fod":13},{"date":"31-Jul-2026","client":"BB Now","opd":10134,"dau":529,"fod":33},{"date":"1-Aug-2026","client":"BB Now","opd":13067,"dau":561,"fod":18},{"date":"2-Aug-2026","client":"BB Now","opd":14329,"dau":541,"fod":0},{"date":"3-Aug-2026","client":"BB Now","opd":10825,"dau":497,"fod":8},{"date":"4-Aug-2026","client":"BB Now","opd":9862,"dau":504,"fod":9},{"date":"5-Aug-2026","client":"BB Now","opd":10170,"dau":508,"fod":12},{"date":"6-Aug-2026","client":"BB Now","opd":10652,"dau":517,"fod":10},{"date":"7-Aug-2026","client":"BB Now","opd":9918,"dau":496,"fod":3},{"date":"8-Aug-2026","client":"BB Now","opd":11443,"dau":500,"fod":10},{"date":"9-Aug-2026","client":"BB Now","opd":12361,"dau":499,"fod":4},{"date":"10-Aug-2026","client":"BB Now","opd":9573,"dau":481,"fod":16},{"date":"11-Aug-2026","client":"BB Now","opd":9784,"dau":490,"fod":16},{"date":"12-Aug-2026","client":"BB Now","opd":10828,"dau":488,"fod":4},
+{"date":"16-Jun-2026","client":"Instamart","opd":634,"dau":38,"fod":4},{"date":"17-Jun-2026","client":"Instamart","opd":678,"dau":41,"fod":5},{"date":"18-Jun-2026","client":"Instamart","opd":656,"dau":39,"fod":4},{"date":"19-Jun-2026","client":"Instamart","opd":723,"dau":44,"fod":5},{"date":"20-Jun-2026","client":"Instamart","opd":698,"dau":42,"fod":5},{"date":"21-Jun-2026","client":"Instamart","opd":578,"dau":36,"fod":4},{"date":"22-Jun-2026","client":"Instamart","opd":701,"dau":43,"fod":5},{"date":"23-Jun-2026","client":"Instamart","opd":689,"dau":42,"fod":5},{"date":"24-Jun-2026","client":"Instamart","opd":734,"dau":45,"fod":5},{"date":"25-Jun-2026","client":"Instamart","opd":745,"dau":46,"fod":5},{"date":"26-Jun-2026","client":"Instamart","opd":723,"dau":44,"fod":5},{"date":"27-Jun-2026","client":"Instamart","opd":690,"dau":42,"fod":5},{"date":"28-Jun-2026","client":"Instamart","opd":556,"dau":34,"fod":3},{"date":"29-Jun-2026","client":"Instamart","opd":701,"dau":43,"fod":5},{"date":"30-Jun-2026","client":"Instamart","opd":734,"dau":45,"fod":5},{"date":"1-Jul-2026","client":"Instamart","opd":1197,"dau":61,"fod":8},{"date":"2-Jul-2026","client":"Instamart","opd":1123,"dau":58,"fod":7},{"date":"3-Jul-2026","client":"Instamart","opd":1012,"dau":53,"fod":6},{"date":"4-Jul-2026","client":"Instamart","opd":834,"dau":45,"fod":5},{"date":"5-Jul-2026","client":"Instamart","opd":887,"dau":47,"fod":6},{"date":"6-Jul-2026","client":"Instamart","opd":1034,"dau":54,"fod":7},{"date":"7-Jul-2026","client":"Instamart","opd":1078,"dau":56,"fod":7},{"date":"8-Jul-2026","client":"Instamart","opd":1043,"dau":54,"fod":7},{"date":"9-Jul-2026","client":"Instamart","opd":1005,"dau":52,"fod":6},{"date":"10-Jul-2026","client":"Instamart","opd":1078,"dau":56,"fod":7},{"date":"11-Jul-2026","client":"Instamart","opd":1213,"dau":62,"fod":8},{"date":"12-Jul-2026","client":"Instamart","opd":1409,"dau":70,"fod":9},{"date":"13-Jul-2026","client":"Instamart","opd":747,"dau":41,"fod":5},{"date":"14-Jul-2026","client":"Instamart","opd":983,"dau":52,"fod":6},{"date":"15-Jul-2026","client":"Instamart","opd":1104,"dau":57,"fod":7},{"date":"16-Jul-2026","client":"Instamart","opd":1178,"dau":53,"fod":5},{"date":"17-Jul-2026","client":"Instamart","opd":1373,"dau":59,"fod":5},{"date":"18-Jul-2026","client":"Instamart","opd":1492,"dau":68,"fod":6},{"date":"19-Jul-2026","client":"Instamart","opd":1341,"dau":52,"fod":3},{"date":"20-Jul-2026","client":"Instamart","opd":1138,"dau":55,"fod":3},{"date":"21-Jul-2026","client":"Instamart","opd":1234,"dau":59,"fod":5},{"date":"22-Jul-2026","client":"Instamart","opd":1479,"dau":68,"fod":4},{"date":"23-Jul-2026","client":"Instamart","opd":1393,"dau":62,"fod":2},{"date":"24-Jul-2026","client":"Instamart","opd":1504,"dau":63,"fod":2},{"date":"25-Jul-2026","client":"Instamart","opd":1677,"dau":62,"fod":4},{"date":"26-Jul-2026","client":"Instamart","opd":1638,"dau":62,"fod":4},{"date":"27-Jul-2026","client":"Instamart","opd":1551,"dau":59,"fod":3},{"date":"28-Jul-2026","client":"Instamart","opd":1662,"dau":69,"fod":1},{"date":"29-Jul-2026","client":"Instamart","opd":1351,"dau":65,"fod":3},{"date":"30-Jul-2026","client":"Instamart","opd":1624,"dau":68,"fod":5},{"date":"31-Jul-2026","client":"Instamart","opd":1832,"dau":75,"fod":2},{"date":"1-Aug-2026","client":"Instamart","opd":1981,"dau":75,"fod":3},{"date":"2-Aug-2026","client":"Instamart","opd":2051,"dau":71,"fod":3},{"date":"3-Aug-2026","client":"Instamart","opd":1717,"dau":65,"fod":0},{"date":"4-Aug-2026","client":"Instamart","opd":1684,"dau":64,"fod":4},{"date":"5-Aug-2026","client":"Instamart","opd":1742,"dau":74,"fod":2},{"date":"6-Aug-2026","client":"Instamart","opd":1686,"dau":65,"fod":2},{"date":"7-Aug-2026","client":"Instamart","opd":1770,"dau":78,"fod":6},{"date":"8-Aug-2026","client":"Instamart","opd":1772,"dau":76,"fod":6},{"date":"9-Aug-2026","client":"Instamart","opd":1826,"dau":67,"fod":3},{"date":"10-Aug-2026","client":"Instamart","opd":1408,"dau":57,"fod":2},{"date":"11-Aug-2026","client":"Instamart","opd":1247,"dau":58,"fod":7},{"date":"12-Aug-2026","client":"Instamart","opd":1392,"dau":58,"fod":4},
+{"date":"1-Jul-2026","client":"Frist Club","opd":1419,"dau":105,"fod":8},{"date":"2-Jul-2026","client":"Frist Club","opd":1312,"dau":98,"fod":7},{"date":"3-Jul-2026","client":"Frist Club","opd":1187,"dau":89,"fod":6},{"date":"4-Jul-2026","client":"Frist Club","opd":978,"dau":75,"fod":5},{"date":"5-Jul-2026","client":"Frist Club","opd":1034,"dau":79,"fod":5},{"date":"6-Jul-2026","client":"Frist Club","opd":1201,"dau":91,"fod":6},{"date":"7-Jul-2026","client":"Frist Club","opd":1234,"dau":93,"fod":7},{"date":"8-Jul-2026","client":"Frist Club","opd":1320,"dau":99,"fod":7},{"date":"9-Jul-2026","client":"Frist Club","opd":1258,"dau":95,"fod":7},{"date":"10-Jul-2026","client":"Frist Club","opd":1313,"dau":98,"fod":7},{"date":"11-Jul-2026","client":"Frist Club","opd":1853,"dau":130,"fod":11},{"date":"12-Jul-2026","client":"Frist Club","opd":1960,"dau":136,"fod":12},{"date":"13-Jul-2026","client":"Frist Club","opd":1504,"dau":110,"fod":9},{"date":"14-Jul-2026","client":"Frist Club","opd":1332,"dau":99,"fod":8},{"date":"15-Jul-2026","client":"Frist Club","opd":1371,"dau":101,"fod":8},{"date":"16-Jul-2026","client":"Frist Club","opd":1323,"dau":172,"fod":2},{"date":"17-Jul-2026","client":"Frist Club","opd":1351,"dau":169,"fod":2},{"date":"18-Jul-2026","client":"Frist Club","opd":1846,"dau":205,"fod":8},{"date":"19-Jul-2026","client":"Frist Club","opd":1966,"dau":196,"fod":0},{"date":"20-Jul-2026","client":"Frist Club","opd":1584,"dau":210,"fod":8},{"date":"21-Jul-2026","client":"Frist Club","opd":1386,"dau":156,"fod":1},{"date":"22-Jul-2026","client":"Frist Club","opd":1226,"dau":156,"fod":3},{"date":"23-Jul-2026","client":"Frist Club","opd":1459,"dau":182,"fod":4},{"date":"24-Jul-2026","client":"Frist Club","opd":1487,"dau":174,"fod":6},{"date":"25-Jul-2026","client":"Frist Club","opd":1645,"dau":204,"fod":3},{"date":"26-Jul-2026","client":"Frist Club","opd":1824,"dau":201,"fod":0},{"date":"27-Jul-2026","client":"Frist Club","opd":1372,"dau":192,"fod":2},{"date":"28-Jul-2026","client":"Frist Club","opd":1289,"dau":156,"fod":2},{"date":"29-Jul-2026","client":"Frist Club","opd":1313,"dau":168,"fod":4},{"date":"30-Jul-2026","client":"Frist Club","opd":1183,"dau":155,"fod":1},{"date":"31-Jul-2026","client":"Frist Club","opd":1238,"dau":162,"fod":5},{"date":"1-Aug-2026","client":"Frist Club","opd":1753,"dau":204,"fod":12},{"date":"2-Aug-2026","client":"Frist Club","opd":1965,"dau":199,"fod":4},{"date":"3-Aug-2026","client":"Frist Club","opd":1473,"dau":199,"fod":10},{"date":"4-Aug-2026","client":"Frist Club","opd":1421,"dau":156,"fod":2},{"date":"5-Aug-2026","client":"Frist Club","opd":1348,"dau":165,"fod":9},{"date":"6-Aug-2026","client":"Frist Club","opd":1437,"dau":162,"fod":0},{"date":"7-Aug-2026","client":"Frist Club","opd":1548,"dau":184,"fod":6},{"date":"8-Aug-2026","client":"Frist Club","opd":1986,"dau":226,"fod":13},{"date":"9-Aug-2026","client":"Frist Club","opd":2168,"dau":214,"fod":3},{"date":"10-Aug-2026","client":"Frist Club","opd":1691,"dau":193,"fod":1},{"date":"11-Aug-2026","client":"Frist Club","opd":1408,"dau":150,"fod":4},{"date":"12-Aug-2026","client":"Frist Club","opd":1575,"dau":170,"fod":13},
+{"date":"1-Jul-2026","client":"Country Delight","opd":302,"dau":28,"fod":2},{"date":"2-Jul-2026","client":"Country Delight","opd":278,"dau":26,"fod":1},{"date":"3-Jul-2026","client":"Country Delight","opd":251,"dau":24,"fod":1},{"date":"4-Jul-2026","client":"Country Delight","opd":208,"dau":21,"fod":1},{"date":"5-Jul-2026","client":"Country Delight","opd":221,"dau":22,"fod":1},{"date":"6-Jul-2026","client":"Country Delight","opd":256,"dau":25,"fod":2},{"date":"7-Jul-2026","client":"Country Delight","opd":263,"dau":25,"fod":2},{"date":"8-Jul-2026","client":"Country Delight","opd":271,"dau":26,"fod":2},{"date":"9-Jul-2026","client":"Country Delight","opd":331,"dau":30,"fod":2},{"date":"10-Jul-2026","client":"Country Delight","opd":319,"dau":29,"fod":2},{"date":"11-Jul-2026","client":"Country Delight","opd":281,"dau":27,"fod":2},{"date":"12-Jul-2026","client":"Country Delight","opd":309,"dau":29,"fod":2},{"date":"13-Jul-2026","client":"Country Delight","opd":233,"dau":23,"fod":1},{"date":"14-Jul-2026","client":"Country Delight","opd":244,"dau":24,"fod":1},{"date":"15-Jul-2026","client":"Country Delight","opd":205,"dau":21,"fod":1},{"date":"16-Jul-2026","client":"Country Delight","opd":206,"dau":22,"fod":1},{"date":"17-Jul-2026","client":"Country Delight","opd":275,"dau":21,"fod":1},{"date":"18-Jul-2026","client":"Country Delight","opd":281,"dau":22,"fod":0},{"date":"19-Jul-2026","client":"Country Delight","opd":280,"dau":19,"fod":0},{"date":"20-Jul-2026","client":"Country Delight","opd":313,"dau":23,"fod":0},{"date":"21-Jul-2026","client":"Country Delight","opd":312,"dau":30,"fod":5},{"date":"22-Jul-2026","client":"Country Delight","opd":286,"dau":24,"fod":0},{"date":"23-Jul-2026","client":"Country Delight","opd":268,"dau":25,"fod":1},{"date":"24-Jul-2026","client":"Country Delight","opd":249,"dau":25,"fod":1},{"date":"25-Jul-2026","client":"Country Delight","opd":351,"dau":29,"fod":0},{"date":"26-Jul-2026","client":"Country Delight","opd":324,"dau":25,"fod":0},{"date":"27-Jul-2026","client":"Country Delight","opd":277,"dau":23,"fod":0},{"date":"28-Jul-2026","client":"Country Delight","opd":291,"dau":23,"fod":1},{"date":"29-Jul-2026","client":"Country Delight","opd":390,"dau":25,"fod":0},{"date":"30-Jul-2026","client":"Country Delight","opd":327,"dau":24,"fod":0},{"date":"31-Jul-2026","client":"Country Delight","opd":352,"dau":26,"fod":3},{"date":"1-Aug-2026","client":"Country Delight","opd":378,"dau":28,"fod":1},{"date":"2-Aug-2026","client":"Country Delight","opd":431,"dau":29,"fod":2},{"date":"3-Aug-2026","client":"Country Delight","opd":383,"dau":28,"fod":0},{"date":"4-Aug-2026","client":"Country Delight","opd":332,"dau":31,"fod":4},{"date":"5-Aug-2026","client":"Country Delight","opd":362,"dau":31,"fod":1},{"date":"6-Aug-2026","client":"Country Delight","opd":369,"dau":31,"fod":2},{"date":"7-Aug-2026","client":"Country Delight","opd":292,"dau":30,"fod":0},{"date":"8-Aug-2026","client":"Country Delight","opd":391,"dau":28,"fod":0},{"date":"9-Aug-2026","client":"Country Delight","opd":426,"dau":26,"fod":0},{"date":"10-Aug-2026","client":"Country Delight","opd":393,"dau":28,"fod":0},{"date":"11-Aug-2026","client":"Country Delight","opd":330,"dau":27,"fod":0},{"date":"12-Aug-2026","client":"Country Delight","opd":349,"dau":30,"fod":0}
+];
+
+// Weekly data — W29…W18 (12 weeks; any selected week shows 6 consecutive)
+// Sources: OPD/DAU/FOD/WAU from QC Pre-Read & Master Tracker; REV from Weekly Payout_Data
+// W29 OPD/FOD updated 20-Jul-2026 from Daily_Overall_Data (15–19 Jul, 5 days; Zepto 2 days only)
+const W = {
+  labels:['W30','W29','W28','W27','W26','W25','W24','W23','W22','W21','W20','W19'],
+  dates: ['22–28 Jul','15–21 Jul','8–14 Jul','1–7 Jul','24–30 Jun','17–23 Jun','10–16 Jun','3–9 Jun','27 May–2 Jun','20–26 May','13–19 May','6–12 May'],
+  opd:{
+    'Blinkit':           [97070,70390,93700,93329,88015,89374,89131,86204,82287,86192,87977,89816],
+    'Zepto':             [228823,93909,219504,224747,213393,241321,257885,248632,238461,297377,346652,202890],
+    'FK Minutes':        [80823,60352,85667,80793,87099,75350,74340,71820,68747,63699,63864,63757],
+    'BB Now':            [60106,47845,68212,78863,65302,62546,63275,60841,64047,64006,62640,61860],
+    'Rapido':            [70875,59411,38870,80621,79870,83131,79610,77340,9902,9121,8540,7840],
+    'Instamart':         [10063,6488,7835,8289,10776,9233,10282,9876,0,0,0,0],
+    'Frist Club':        [10568,7857,10552,10288,11627,9762,10375,9943,0,0,0,0],
+    'Country Delight':   [2103,1247,1969,2093,1718,1511,1396,1352,0,0,0,0],
+    'Ownly':             [767,0,577,520,1198,1236,1074,1021,0,0,0,0]
+  },
+  dau:{
+    'Blinkit':           [744,270,672,680,677,676,657,641,613,608,602,604],
+    'Zepto':             [1481,578,1346,1401,1308,1390,1470,1438,1346,1697,1780,1049],
+    'FK Minutes':        [703,308,690,642,683,612,595,578,579,553,526,507],
+    'BB Now':            [485,213,492,518,499,503,500,487,478,458,421,400],
+    'Rapido':            [1497,745,711,1655,1506,1550,1514,1480,123,115,97,94],
+    'Instamart':         [62,16,48,47,48,52,52,51,0,0,0,0],
+    'Frist Club':        [183,77,209,215,215,181,186,182,0,0,0,0],
+    'Country Delight':   [26,8,22,24,20,18,17,17,0,0,0,0],
+    'Ownly':             [5,0,4,4,8,8,7,7,0,0,0,0]
+  },
+  fod:{
+    'Blinkit':           [125,78,103,73,85,114,102,97,98,72,74,78],
+    'Zepto':             [210,82,138,184,116,109,61,58,86,63,34,9],
+    'FK Minutes':        [84,79,129,142,68,106,75,71,91,105,84,86],
+    'BB Now':            [65,40,57,84,56,76,86,82,80,67,71,50],
+    'Rapido':            [265,319,47,1358,169,229,226,215,35,47,17,28],
+    'Instamart':         [24,21,22,13,15,20,33,31,0,0,0,0],
+    'Frist Club':        [25,13,9,28,28,40,32,30,0,0,0,0],
+    'Country Delight':   [7,4,2,3,3,4,4,4,0,0,0,0],
+    'Ownly':             [0,0,0,0,0,0,1,0,0,0,0,0]
+  },
+  wau:{
+    'Blinkit':           [1150,1107,1050,1035,1038,1034,1012,999,955,921,926,909],
+    'Zepto':             [2240,2116,2077,2106,1964,2110,2136,2241,2381,3511,3580,2744],
+    'FK Minutes':        [1021,1082,1025,961,866,901,843,844,865,811,798,730],
+    'BB Now':            [0,698,715,729,691,708,708,687,661,657,650,595],
+    'Rapido':            [3026,3200,1561,4652,5820,5987,4576,4780,4473,4180,3901,2354],
+    'Instamart':         [127,120,97,111,93,109,125,99,108,96,83,71],
+    'Frist Club':        [283,278,290,280,308,277,286,235,220,199,180,159],
+    'Country Delight':   [37,32,29,29,29,28,28,29,29,31,42,13],
+    'Ownly':             [8,10,9,12,10,10,10,11,11,13,19,19]
+  },
+  att:{
+    'Blinkit':           ['–','15%','17%','17%','17%','17%','17%','17%','–','–','–','–'],
+    'Zepto':             ['–','18%','15%','12%','19%','12%','14%','13%','–','–','–','–'],
+    'FK Minutes':        ['–','15%','16%','15%','17%','12%','14%','13%','–','–','–','–'],
+    'BB Now':            ['–','17%','16%','15%','17%','17%','17%','16%','–','–','–','–'],
+    'Rapido':            ['–','24%','70%','27%','24%','25%','26%','25%','–','–','–','–'],
+    'Instamart':         ['–','42%','43%','35%','46%','47%','45%','44%','–','–','–','–'],
+    'Frist Club':        ['–','20%','13%','12%','17%','16%','15%','15%','–','–','–','–'],
+    'Country Delight':   ['–','–','–','–','–','–','–','–','–','–','–','–'],
+    'Ownly':             ['–','–','–','–','–','–','–','–','–','–','–','–']
+  },
+  rev:{
+    'Blinkit':           [4331339,4216819,4326329,4446453,4000417,4116245,4041104,3825815,3840805,3897813,3932090,3964067],
+    'Zepto':             [11133685,10088684,10689700,11083510,10039238,11331784,11281831,12209794,12467181,16095653,18886528,16691709],
+    'FK Minutes':        [4111139,3923000,4318420,4138155,3482723,3573850,3453110,3394733,3305879,2904848,2937865,3208643],
+    'BB Now':            [0,0,0,0,3424498,3376428,3484812,3556191,3473100,3405850,3269602,3352896],
+    'Rapido':            [4230035,5039695,2539652,4813676,6697047,6757991,5784174,5600651,5286387,5473208,4801049,3485934],
+    'Instamart':         [464571,396174,401811,433447,426474,472004,569293,491039,597015,452709,371040,334987],
+    'Frist Club':        [1856124,1746455,2347575,2199366,2337323,1797102,2149934,1821332,1764591,1517392,1382696,1130269],
+    'Country Delight':   [0,0,0,0,0,0,0,94284,0,0,0,0],
+    'Ownly':             [81000,47100,47571,45600,116900,125440,109420,92100,115300,71600,81320,104400]
+  }
+};
+
+// City data — sourced from Master Tracker "daily || Master_City_wise" tab (D-1=19-Jul, D-8=11-Jul)
+// opd/dau/fod = D-1; popd/pdau/pfod = D-8 (prev week same day)
+const CITY_DATA = [
+  {city:'Bengaluru', zone:'South', opd:11065, dau:608, fod:6,  popd:15580, pdau:716, pfod:3},
+  {city:'Chennai',   zone:'South', opd:165,   dau:11,  fod:0,  popd:4518,  pdau:160, pfod:0},
+  {city:'Hyderabad', zone:'South', opd:1324,  dau:56,  fod:1,  popd:5302,  pdau:242, pfod:1},
+  {city:'Delhi NCR', zone:'North', opd:6135,  dau:569, fod:12, popd:7935,  pdau:599, pfod:5},
+  {city:'Kolkata',   zone:'East',  opd:4962,  dau:256, fod:0,  popd:6257,  pdau:345, pfod:6},
+  {city:'Mumbai',    zone:'West',  opd:4758,  dau:435, fod:12, popd:6765,  pdau:323, pfod:4},
+  {city:'Pune',      zone:'West',  opd:913,   dau:50,  fod:1,  popd:2368,  pdau:108, pfod:1},
+];
+
+// Zone aggregates (sum of mapped cities; "Other Cities" bucket ≈ 29,971 OPD distributed proportionally)
+const ZONE_DATA = (function(){
+  const zones = ['South','North','West','East'];
+  const result = {};
+  zones.forEach(z => {
+    const cities = CITY_DATA.filter(c=>c.zone===z);
+    const sumKnown = cities.reduce((s,c)=>s+c.opd,0);
+    const otherTotal = 29971; // Pan India OPD - sum of 7 mapped cities
+    const allKnown = CITY_DATA.reduce((s,c)=>s+c.opd,0);
+    const otherShare = Math.round(otherTotal * (sumKnown / allKnown));
+    result[z] = {
+      opd:  cities.reduce((s,c)=>s+c.opd,0)  + otherShare,
+      dau:  cities.reduce((s,c)=>s+c.dau,0),
+      fod:  cities.reduce((s,c)=>s+c.fod,0),
+      popd: cities.reduce((s,c)=>s+c.popd,0),
+      pdau: cities.reduce((s,c)=>s+c.pdau,0),
+      pfod: cities.reduce((s,c)=>s+c.pfod,0),
+      cities: cities.map(c=>c.city)
+    };
+  });
+  return result;
+})();
+
+const CLIENT_META={
+  'Blinkit':{color:'#F5D40A'},'Zepto':{color:'#9B59B6'},'FK Minutes':{color:'#2874F0'},
+  'BB Now':{color:'#E31E25'},'Rapido':{color:'#00C2A8'},'Instamart':{color:'#FC8019'},
+  'Frist Club':{color:'#4CAF50'},'Country Delight':{color:'#27AE60'},'Ownly':{color:'#8E44AD'}
+};
+const CLIENTS = Object.keys(CLIENT_META);
+
+// ── FR Performance data — sourced from QC_FRs Master Tracker "#Stores & Clients_FR Wise" tab ──
+const FR_CLIENTS = ["Blinkit", "FK Min", "BB Now", "Instamart", "First Club", "Rapido", "Zepto"];
+const FR_TL_SUMMARY = [{"tl": "Devender Lodhi", "zone": "North", "frsCount": 7, "numClients": 4, "storesTotal": 278, "storesByClient": {"Blinkit": 5, "FK Min": 44, "BB Now": 0, "Instamart": 0, "First Club": 0, "Rapido": 14, "Zepto": 215}, "wauTotal": 1026, "wauByClient": {"Blinkit": 47, "FK Min": 267, "BB Now": 0, "Instamart": 0, "First Club": 0, "Rapido": 156, "Zepto": 556}, "top": 4, "avg": 1, "bottom": 2, "dauGrt200": 1, "dau100_199": 0, "dau50_99": 1, "dau30_50": 2, "dauLess30": 3}, {"tl": "Nasim", "zone": "West", "frsCount": 1, "numClients": 3, "storesTotal": 123, "storesByClient": {"Blinkit": 0, "FK Min": 30, "BB Now": 0, "Instamart": 0, "First Club": 0, "Rapido": 1, "Zepto": 92}, "wauTotal": 333, "wauByClient": {"Blinkit": 0, "FK Min": 112, "BB Now": 0, "Instamart": 0, "First Club": 0, "Rapido": 11, "Zepto": 210}, "top": 1, "avg": 0, "bottom": 0, "dauGrt200": 0, "dau100_199": 1, "dau50_99": 0, "dau30_50": 0, "dauLess30": 0}, {"tl": "Sahil", "zone": "North", "frsCount": 17, "numClients": 5, "storesTotal": 249, "storesByClient": {"Blinkit": 152, "FK Min": 8, "BB Now": 48, "Instamart": 2, "First Club": 0, "Rapido": 39, "Zepto": 0}, "wauTotal": 1572, "wauByClient": {"Blinkit": 576, "FK Min": 21, "BB Now": 159, "Instamart": 2, "First Club": 0, "Rapido": 814, "Zepto": 0}, "top": 6, "avg": 1, "bottom": 10, "dauGrt200": 0, "dau100_199": 3, "dau50_99": 1, "dau30_50": 3, "dauLess30": 10}, {"tl": "Shyam Nandan", "zone": "East", "frsCount": 10, "numClients": 5, "storesTotal": 185, "storesByClient": {"Blinkit": 28, "FK Min": 99, "BB Now": 40, "Instamart": 2, "First Club": 0, "Rapido": 16, "Zepto": 0}, "wauTotal": 1036, "wauByClient": {"Blinkit": 61, "FK Min": 510, "BB Now": 106, "Instamart": 2, "First Club": 0, "Rapido": 357, "Zepto": 0}, "top": 5, "avg": 2, "bottom": 3, "dauGrt200": 0, "dau100_199": 0, "dau50_99": 5, "dau30_50": 1, "dauLess30": 4}, {"tl": "Sudharshan R", "zone": "South", "frsCount": 2, "numClients": 1, "storesTotal": 559, "storesByClient": {"Blinkit": 0, "FK Min": 0, "BB Now": 0, "Instamart": 0, "First Club": 0, "Rapido": 0, "Zepto": 559}, "wauTotal": 1496, "wauByClient": {"Blinkit": 0, "FK Min": 0, "BB Now": 0, "Instamart": 0, "First Club": 0, "Rapido": 0, "Zepto": 1496}, "top": 2, "avg": 0, "bottom": 0, "dauGrt200": 1, "dau100_199": 1, "dau50_99": 0, "dau30_50": 0, "dauLess30": 0}, {"tl": "Sumit", "zone": "South", "frsCount": 7, "numClients": 5, "storesTotal": 158, "storesByClient": {"Blinkit": 89, "FK Min": 9, "BB Now": 14, "Instamart": 23, "First Club": 23, "Rapido": 0, "Zepto": 0}, "wauTotal": 733, "wauByClient": {"Blinkit": 281, "FK Min": 19, "BB Now": 104, "Instamart": 99, "First Club": 230, "Rapido": 0, "Zepto": 0}, "top": 4, "avg": 0, "bottom": 6, "dauGrt200": 0, "dau100_199": 1, "dau50_99": 1, "dau30_50": 1, "dauLess30": 7}, {"tl": "Sumit.W", "zone": "West", "frsCount": 1, "numClients": 4, "storesTotal": 50, "storesByClient": {"Blinkit": 23, "FK Min": 14, "BB Now": 8, "Instamart": 5, "First Club": 0, "Rapido": 0, "Zepto": 0}, "wauTotal": 113, "wauByClient": {"Blinkit": 59, "FK Min": 31, "BB Now": 18, "Instamart": 5, "First Club": 0, "Rapido": 0, "Zepto": 0}, "top": 0, "avg": 1, "bottom": 3, "dauGrt200": 0, "dau100_199": 0, "dau50_99": 0, "dau30_50": 1, "dauLess30": 3}];
+const FR_LIST = [{"id": "LSN1944", "name": "Shahzad", "tl": "Devender Lodhi", "zone": "North", "numClients": 2, "storesTotal": 7, "storesByClient": {"Blinkit": 0, "FK Min": 5, "BB Now": 0, "Instamart": 0, "First Club": 0, "Rapido": 2, "Zepto": 0}, "slab": "Bottom FR", "wauTotal": 42, "wauByClient": {"Blinkit": 0, "FK Min": 38, "BB Now": 0, "Instamart": 0, "First Club": 0, "Rapido": 4, "Zepto": 0}}, {"id": "LSN1329", "name": "Shivani", "tl": "Devender Lodhi", "zone": "North", "numClients": 2, "storesTotal": 216, "storesByClient": {"Blinkit": 0, "FK Min": 0, "BB Now": 0, "Instamart": 0, "First Club": 0, "Rapido": 1, "Zepto": 215}, "slab": "Top FR", "wauTotal": 564, "wauByClient": {"Blinkit": 0, "FK Min": 0, "BB Now": 0, "Instamart": 0, "First Club": 0, "Rapido": 8, "Zepto": 556}}, {"id": "LSN1647", "name": "Surya", "tl": "Devender Lodhi", "zone": "North", "numClients": 2, "storesTotal": 17, "storesByClient": {"Blinkit": 0, "FK Min": 16, "BB Now": 0, "Instamart": 0, "First Club": 0, "Rapido": 1, "Zepto": 0}, "slab": "Top FR", "wauTotal": 135, "wauByClient": {"Blinkit": 0, "FK Min": 134, "BB Now": 0, "Instamart": 0, "First Club": 0, "Rapido": 1, "Zepto": 0}}, {"id": "RTC748", "name": "Raman", "tl": "Devender Lodhi", "zone": "North", "numClients": 2, "storesTotal": 12, "storesByClient": {"Blinkit": 0, "FK Min": 6, "BB Now": 0, "Instamart": 0, "First Club": 0, "Rapido": 6, "Zepto": 0}, "slab": "Top FR", "wauTotal": 142, "wauByClient": {"Blinkit": 0, "FK Min": 6, "BB Now": 0, "Instamart": 0, "First Club": 0, "Rapido": 136, "Zepto": 0}}, {"id": "RTC1142", "name": "Nikhil", "tl": "Devender Lodhi", "zone": "North", "numClients": 2, "storesTotal": 13, "storesByClient": {"Blinkit": 0, "FK Min": 10, "BB Now": 0, "Instamart": 0, "First Club": 0, "Rapido": 3, "Zepto": 0}, "slab": "Top FR", "wauTotal": 78, "wauByClient": {"Blinkit": 0, "FK Min": 74, "BB Now": 0, "Instamart": 0, "First Club": 0, "Rapido": 4, "Zepto": 0}}, {"id": "RTC1260", "name": "Punit", "tl": "Devender Lodhi", "zone": "North", "numClients": 2, "storesTotal": 6, "storesByClient": {"Blinkit": 0, "FK Min": 5, "BB Now": 0, "Instamart": 0, "First Club": 0, "Rapido": 1, "Zepto": 0}, "slab": "Bottom FR", "wauTotal": 15, "wauByClient": {"Blinkit": 0, "FK Min": 12, "BB Now": 0, "Instamart": 0, "First Club": 0, "Rapido": 3, "Zepto": 0}}, {"id": "LSN1942", "name": "Kuldeep", "tl": "Devender Lodhi", "zone": "North", "numClients": 2, "storesTotal": 7, "storesByClient": {"Blinkit": 5, "FK Min": 2, "BB Now": 0, "Instamart": 0, "First Club": 0, "Rapido": 0, "Zepto": 0}, "slab": "Avg Performers", "wauTotal": 50, "wauByClient": {"Blinkit": 47, "FK Min": 3, "BB Now": 0, "Instamart": 0, "First Club": 0, "Rapido": 0, "Zepto": 0}}, {"id": "LSN1675", "name": "Ninad", "tl": "Nasim", "zone": "West", "numClients": 3, "storesTotal": 123, "storesByClient": {"Blinkit": 0, "FK Min": 30, "BB Now": 0, "Instamart": 0, "First Club": 0, "Rapido": 1, "Zepto": 92}, "slab": "Top FR", "wauTotal": 333, "wauByClient": {"Blinkit": 0, "FK Min": 112, "BB Now": 0, "Instamart": 0, "First Club": 0, "Rapido": 11, "Zepto": 210}}, {"id": "LSN1024", "name": "Arun Gupta", "tl": "Sahil", "zone": "North", "numClients": 2, "storesTotal": 23, "storesByClient": {"Blinkit": 19, "FK Min": 0, "BB Now": 0, "Instamart": 0, "First Club": 0, "Rapido": 4, "Zepto": 0}, "slab": "Top FR", "wauTotal": 317, "wauByClient": {"Blinkit": 199, "FK Min": 0, "BB Now": 0, "Instamart": 0, "First Club": 0, "Rapido": 118, "Zepto": 0}}, {"id": "LSN1242", "name": "Gaurav Kumar", "tl": "Sahil", "zone": "North", "numClients": 0, "storesTotal": 0, "storesByClient": {"Blinkit": 0, "FK Min": 0, "BB Now": 0, "Instamart": 0, "First Club": 0, "Rapido": 0, "Zepto": 0}, "slab": "Bottom FR", "wauTotal": 0, "wauByClient": {"Blinkit": 0, "FK Min": 0, "BB Now": 0, "Instamart": 0, "First Club": 0, "Rapido": 0, "Zepto": 0}}, {"id": "LSN1932", "name": "Arvind Yadav", "tl": "Sahil", "zone": "North", "numClients": 4, "storesTotal": 25, "storesByClient": {"Blinkit": 5, "FK Min": 2, "BB Now": 17, "Instamart": 0, "First Club": 0, "Rapido": 1, "Zepto": 0}, "slab": "Top FR", "wauTotal": 152, "wauByClient": {"Blinkit": 9, "FK Min": 4, "BB Now": 76, "Instamart": 0, "First Club": 0, "Rapido": 63, "Zepto": 0}}, {"id": "RTC1039", "name": "Govind parmar", "tl": "Sahil", "zone": "North", "numClients": 1, "storesTotal": 18, "storesByClient": {"Blinkit": 0, "FK Min": 0, "BB Now": 0, "Instamart": 0, "First Club": 0, "Rapido": 18, "Zepto": 0}, "slab": "Top FR", "wauTotal": 354, "wauByClient": {"Blinkit": 0, "FK Min": 0, "BB Now": 0, "Instamart": 0, "First Club": 0, "Rapido": 354, "Zepto": 0}}, {"id": "RTC1115", "name": "Amarjeet", "tl": "Sahil", "zone": "North", "numClients": 3, "storesTotal": 25, "storesByClient": {"Blinkit": 18, "FK Min": 1, "BB Now": 0, "Instamart": 0, "First Club": 0, "Rapido": 6, "Zepto": 0}, "slab": "Top FR", "wauTotal": 133, "wauByClient": {"Blinkit": 68, "FK Min": 3, "BB Now": 0, "Instamart": 0, "First Club": 0, "Rapido": 62, "Zepto": 0}}, {"id": "RTC1573", "name": "Vikas Kumar", "tl": "Sahil", "zone": "North", "numClients": 4, "storesTotal": 19, "storesByClient": {"Blinkit": 3, "FK Min": 3, "BB Now": 10, "Instamart": 0, "First Club": 0, "Rapido": 3, "Zepto": 0}, "slab": "Top FR", "wauTotal": 214, "wauByClient": {"Blinkit": 4, "FK Min": 11, "BB Now": 24, "Instamart": 0, "First Club": 0, "Rapido": 175, "Zepto": 0}}, {"id": "RTC2523", "name": "Partham thakur", "tl": "Sahil", "zone": "North", "numClients": 0, "storesTotal": 0, "storesByClient": {"Blinkit": 0, "FK Min": 0, "BB Now": 0, "Instamart": 0, "First Club": 0, "Rapido": 0, "Zepto": 0}, "slab": "Bottom FR", "wauTotal": 0, "wauByClient": {"Blinkit": 0, "FK Min": 0, "BB Now": 0, "Instamart": 0, "First Club": 0, "Rapido": 0, "Zepto": 0}}, {"id": "RTC3090", "name": "Ayush", "tl": "Sahil", "zone": "North", "numClients": 0, "storesTotal": 0, "storesByClient": {"Blinkit": 0, "FK Min": 0, "BB Now": 0, "Instamart": 0, "First Club": 0, "Rapido": 0, "Zepto": 0}, "slab": "Bottom FR", "wauTotal": 0, "wauByClient": {"Blinkit": 0, "FK Min": 0, "BB Now": 0, "Instamart": 0, "First Club": 0, "Rapido": 0, "Zepto": 0}}, {"id": "RTC3078", "name": "Shivam Dubey", "tl": "Sahil", "zone": "North", "numClients": 0, "storesTotal": 0, "storesByClient": {"Blinkit": 0, "FK Min": 0, "BB Now": 0, "Instamart": 0, "First Club": 0, "Rapido": 0, "Zepto": 0}, "slab": "Bottom FR", "wauTotal": 0, "wauByClient": {"Blinkit": 0, "FK Min": 0, "BB Now": 0, "Instamart": 0, "First Club": 0, "Rapido": 0, "Zepto": 0}}, {"id": "RTC3102", "name": "Nitin Chaudhary", "tl": "Sahil", "zone": "North", "numClients": 1, "storesTotal": 1, "storesByClient": {"Blinkit": 0, "FK Min": 1, "BB Now": 0, "Instamart": 0, "First Club": 0, "Rapido": 0, "Zepto": 0}, "slab": "Bottom FR", "wauTotal": 2, "wauByClient": {"Blinkit": 0, "FK Min": 2, "BB Now": 0, "Instamart": 0, "First Club": 0, "Rapido": 0, "Zepto": 0}}, {"id": "LSN2225", "name": "Peerzada Uzair Ahmad Shah", "tl": "Sahil", "zone": "North", "numClients": 1, "storesTotal": 1, "storesByClient": {"Blinkit": 1, "FK Min": 0, "BB Now": 0, "Instamart": 0, "First Club": 0, "Rapido": 0, "Zepto": 0}, "slab": "Bottom FR", "wauTotal": 5, "wauByClient": {"Blinkit": 5, "FK Min": 0, "BB Now": 0, "Instamart": 0, "First Club": 0, "Rapido": 0, "Zepto": 0}}, {"id": "RTC1454", "name": "Puneet Bindra", "tl": "Sahil", "zone": "North", "numClients": 1, "storesTotal": 8, "storesByClient": {"Blinkit": 8, "FK Min": 0, "BB Now": 0, "Instamart": 0, "First Club": 0, "Rapido": 0, "Zepto": 0}, "slab": "Avg Performers", "wauTotal": 59, "wauByClient": {"Blinkit": 59, "FK Min": 0, "BB Now": 0, "Instamart": 0, "First Club": 0, "Rapido": 0, "Zepto": 0}}, {"id": "RTC2722", "name": "Salim", "tl": "Sahil", "zone": "North", "numClients": 2, "storesTotal": 17, "storesByClient": {"Blinkit": 0, "FK Min": 0, "BB Now": 16, "Instamart": 1, "First Club": 0, "Rapido": 0, "Zepto": 0}, "slab": "Bottom FR", "wauTotal": 32, "wauByClient": {"Blinkit": 0, "FK Min": 0, "BB Now": 31, "Instamart": 1, "First Club": 0, "Rapido": 0, "Zepto": 0}}, {"id": "RTC2103", "name": "Aakash", "tl": "Sahil", "zone": "North", "numClients": 3, "storesTotal": 100, "storesByClient": {"Blinkit": 98, "FK Min": 1, "BB Now": 0, "Instamart": 1, "First Club": 0, "Rapido": 0, "Zepto": 0}, "slab": "Top FR", "wauTotal": 234, "wauByClient": {"Blinkit": 232, "FK Min": 1, "BB Now": 0, "Instamart": 1, "First Club": 0, "Rapido": 0, "Zepto": 0}}, {"id": "RTC962", "name": "Reshu", "tl": "Sahil", "zone": "North", "numClients": 1, "storesTotal": 7, "storesByClient": {"Blinkit": 0, "FK Min": 0, "BB Now": 0, "Instamart": 0, "First Club": 0, "Rapido": 7, "Zepto": 0}, "slab": "Bottom FR", "wauTotal": 42, "wauByClient": {"Blinkit": 0, "FK Min": 0, "BB Now": 0, "Instamart": 0, "First Club": 0, "Rapido": 42, "Zepto": 0}}, {"id": "RTC2833", "name": "Hasim", "tl": "Sahil", "zone": "North", "numClients": 1, "storesTotal": 3, "storesByClient": {"Blinkit": 0, "FK Min": 0, "BB Now": 3, "Instamart": 0, "First Club": 0, "Rapido": 0, "Zepto": 0}, "slab": "Bottom FR", "wauTotal": 10, "wauByClient": {"Blinkit": 0, "FK Min": 0, "BB Now": 10, "Instamart": 0, "First Club": 0, "Rapido": 0, "Zepto": 0}}, {"id": "RTC2705", "name": "Nikhil S", "tl": "Sahil", "zone": "North", "numClients": 1, "storesTotal": 2, "storesByClient": {"Blinkit": 0, "FK Min": 0, "BB Now": 2, "Instamart": 0, "First Club": 0, "Rapido": 0, "Zepto": 0}, "slab": "Bottom FR", "wauTotal": 18, "wauByClient": {"Blinkit": 0, "FK Min": 0, "BB Now": 18, "Instamart": 0, "First Club": 0, "Rapido": 0, "Zepto": 0}}, {"id": "RTC985", "name": "Mostak Mondal", "tl": "Shyam Nandan", "zone": "East", "numClients": 4, "storesTotal": 32, "storesByClient": {"Blinkit": 1, "FK Min": 29, "BB Now": 0, "Instamart": 1, "First Club": 0, "Rapido": 1, "Zepto": 0}, "slab": "Top FR", "wauTotal": 186, "wauByClient": {"Blinkit": 1, "FK Min": 179, "BB Now": 0, "Instamart": 1, "First Club": 0, "Rapido": 5, "Zepto": 0}}, {"id": "LSN1005", "name": "Vikas Kumar", "tl": "Shyam Nandan", "zone": "East", "numClients": 4, "storesTotal": 19, "storesByClient": {"Blinkit": 3, "FK Min": 3, "BB Now": 10, "Instamart": 0, "First Club": 0, "Rapido": 3, "Zepto": 0}, "slab": "Top FR", "wauTotal": 214, "wauByClient": {"Blinkit": 4, "FK Min": 11, "BB Now": 24, "Instamart": 0, "First Club": 0, "Rapido": 175, "Zepto": 0}}, {"id": "RTC1367", "name": "Monalisa Dey", "tl": "Shyam Nandan", "zone": "East", "numClients": 3, "storesTotal": 25, "storesByClient": {"Blinkit": 5, "FK Min": 19, "BB Now": 1, "Instamart": 0, "First Club": 0, "Rapido": 0, "Zepto": 0}, "slab": "Top FR", "wauTotal": 110, "wauByClient": {"Blinkit": 7, "FK Min": 101, "BB Now": 2, "Instamart": 0, "First Club": 0, "Rapido": 0, "Zepto": 0}}, {"id": "RTC1608", "name": "Ibrar Hussain", "tl": "Shyam Nandan", "zone": "East", "numClients": 2, "storesTotal": 15, "storesByClient": {"Blinkit": 1, "FK Min": 14, "BB Now": 0, "Instamart": 0, "First Club": 0, "Rapido": 0, "Zepto": 0}, "slab": "Top FR", "wauTotal": 126, "wauByClient": {"Blinkit": 2, "FK Min": 124, "BB Now": 0, "Instamart": 0, "First Club": 0, "Rapido": 0, "Zepto": 0}}, {"id": "LSN1774", "name": "Sagar Kumar Mondal", "tl": "Shyam Nandan", "zone": "East", "numClients": 2, "storesTotal": 22, "storesByClient": {"Blinkit": 0, "FK Min": 1, "BB Now": 21, "Instamart": 0, "First Club": 0, "Rapido": 0, "Zepto": 0}, "slab": "Bottom FR", "wauTotal": 45, "wauByClient": {"Blinkit": 0, "FK Min": 1, "BB Now": 44, "Instamart": 0, "First Club": 0, "Rapido": 0, "Zepto": 0}}, {"id": "RTC2161", "name": "Nitish Kumar", "tl": "Shyam Nandan", "zone": "East", "numClients": 3, "storesTotal": 18, "storesByClient": {"Blinkit": 0, "FK Min": 9, "BB Now": 4, "Instamart": 0, "First Club": 0, "Rapido": 5, "Zepto": 0}, "slab": "Top FR", "wauTotal": 162, "wauByClient": {"Blinkit": 0, "FK Min": 29, "BB Now": 11, "Instamart": 0, "First Club": 0, "Rapido": 122, "Zepto": 0}}, {"id": "RTC1993", "name": "Kaushik Dey", "tl": "Shyam Nandan", "zone": "East", "numClients": 3, "storesTotal": 16, "storesByClient": {"Blinkit": 3, "FK Min": 12, "BB Now": 0, "Instamart": 1, "First Club": 0, "Rapido": 0, "Zepto": 0}, "slab": "Bottom FR", "wauTotal": 37, "wauByClient": {"Blinkit": 3, "FK Min": 33, "BB Now": 0, "Instamart": 1, "First Club": 0, "Rapido": 0, "Zepto": 0}}, {"id": "LSN1510", "name": "Sunil Kumar Rajak", "tl": "Shyam Nandan", "zone": "East", "numClients": 4, "storesTotal": 12, "storesByClient": {"Blinkit": 3, "FK Min": 3, "BB Now": 3, "Instamart": 0, "First Club": 0, "Rapido": 3, "Zepto": 0}, "slab": "Avg Performers", "wauTotal": 51, "wauByClient": {"Blinkit": 5, "FK Min": 6, "BB Now": 23, "Instamart": 0, "First Club": 0, "Rapido": 17, "Zepto": 0}}, {"id": "RTC2648", "name": "Bappus Das", "tl": "Shyam Nandan", "zone": "East", "numClients": 1, "storesTotal": 1, "storesByClient": {"Blinkit": 0, "FK Min": 0, "BB Now": 0, "Instamart": 0, "First Club": 0, "Rapido": 1, "Zepto": 0}, "slab": "Bottom FR", "wauTotal": 32, "wauByClient": {"Blinkit": 0, "FK Min": 0, "BB Now": 0, "Instamart": 0, "First Club": 0, "Rapido": 32, "Zepto": 0}}, {"id": "RTC2254", "name": "Mritunjoy Kalita", "tl": "Shyam Nandan", "zone": "East", "numClients": 4, "storesTotal": 25, "storesByClient": {"Blinkit": 12, "FK Min": 9, "BB Now": 1, "Instamart": 0, "First Club": 0, "Rapido": 3, "Zepto": 0}, "slab": "Avg Performers", "wauTotal": 73, "wauByClient": {"Blinkit": 39, "FK Min": 26, "BB Now": 2, "Instamart": 0, "First Club": 0, "Rapido": 6, "Zepto": 0}}, {"id": "RTC1110", "name": "Sadiq", "tl": "Sudharshan R", "zone": "South", "numClients": 1, "storesTotal": 134, "storesByClient": {"Blinkit": 0, "FK Min": 0, "BB Now": 0, "Instamart": 0, "First Club": 0, "Rapido": 0, "Zepto": 134}, "slab": "Top FR", "wauTotal": 398, "wauByClient": {"Blinkit": 0, "FK Min": 0, "BB Now": 0, "Instamart": 0, "First Club": 0, "Rapido": 0, "Zepto": 398}}, {"id": "LSN1062", "name": "Gusti", "tl": "Sudharshan R", "zone": "South", "numClients": 1, "storesTotal": 425, "storesByClient": {"Blinkit": 0, "FK Min": 0, "BB Now": 0, "Instamart": 0, "First Club": 0, "Rapido": 0, "Zepto": 425}, "slab": "Top FR", "wauTotal": 1098, "wauByClient": {"Blinkit": 0, "FK Min": 0, "BB Now": 0, "Instamart": 0, "First Club": 0, "Rapido": 0, "Zepto": 1098}}, {"id": "RTC2058", "name": "Chandru", "tl": "Sumit", "zone": "South", "numClients": 4, "storesTotal": 77, "storesByClient": {"Blinkit": 63, "FK Min": 2, "BB Now": 11, "Instamart": 0, "First Club": 1, "Rapido": 0, "Zepto": 0}, "slab": "Top FR", "wauTotal": 332, "wauByClient": {"Blinkit": 220, "FK Min": 2, "BB Now": 100, "Instamart": 0, "First Club": 10, "Rapido": 0, "Zepto": 0}}, {"id": "RTC2257", "name": "Hemanth Kumar K S", "tl": "Sumit", "zone": "South", "numClients": 3, "storesTotal": 35, "storesByClient": {"Blinkit": 26, "FK Min": 6, "BB Now": 3, "Instamart": 0, "First Club": 0, "Rapido": 0, "Zepto": 0}, "slab": "Top FR", "wauTotal": 80, "wauByClient": {"Blinkit": 61, "FK Min": 15, "BB Now": 4, "Instamart": 0, "First Club": 0, "Rapido": 0, "Zepto": 0}}, {"id": "RTC2340", "name": "B Sowmya", "tl": "Sumit", "zone": "South", "numClients": 2, "storesTotal": 4, "storesByClient": {"Blinkit": 0, "FK Min": 1, "BB Now": 0, "Instamart": 0, "First Club": 3, "Rapido": 0, "Zepto": 0}, "slab": "Bottom FR", "wauTotal": 24, "wauByClient": {"Blinkit": 0, "FK Min": 2, "BB Now": 0, "Instamart": 0, "First Club": 22, "Rapido": 0, "Zepto": 0}}, {"id": "", "name": "Santosh Kumar", "tl": "Sumit", "zone": "South", "numClients": 1, "storesTotal": 7, "storesByClient": {"Blinkit": 0, "FK Min": 0, "BB Now": 0, "Instamart": 7, "First Club": 0, "Rapido": 0, "Zepto": 0}, "slab": "Bottom FR", "wauTotal": 16, "wauByClient": {"Blinkit": 0, "FK Min": 0, "BB Now": 0, "Instamart": 16, "First Club": 0, "Rapido": 0, "Zepto": 0}}, {"id": "RTC2698", "name": "Manush D", "tl": "Sumit", "zone": "South", "numClients": 1, "storesTotal": 16, "storesByClient": {"Blinkit": 0, "FK Min": 0, "BB Now": 0, "Instamart": 16, "First Club": 0, "Rapido": 0, "Zepto": 0}, "slab": "Top FR", "wauTotal": 83, "wauByClient": {"Blinkit": 0, "FK Min": 0, "BB Now": 0, "Instamart": 83, "First Club": 0, "Rapido": 0, "Zepto": 0}}, {"id": "RTC2743", "name": "Sushant Shinde", "tl": "Sumit.W", "zone": "West", "numClients": 4, "storesTotal": 29, "storesByClient": {"Blinkit": 11, "FK Min": 8, "BB Now": 8, "Instamart": 2, "First Club": 0, "Rapido": 0, "Zepto": 0}, "slab": "Avg Performers", "wauTotal": 68, "wauByClient": {"Blinkit": 30, "FK Min": 18, "BB Now": 18, "Instamart": 2, "First Club": 0, "Rapido": 0, "Zepto": 0}}, {"id": "RTC2728", "name": "Ganesh Sirigineedi", "tl": "Sumit", "zone": "South", "numClients": 1, "storesTotal": 4, "storesByClient": {"Blinkit": 0, "FK Min": 0, "BB Now": 0, "Instamart": 0, "First Club": 4, "Rapido": 0, "Zepto": 0}, "slab": "Top FR", "wauTotal": 81, "wauByClient": {"Blinkit": 0, "FK Min": 0, "BB Now": 0, "Instamart": 0, "First Club": 81, "Rapido": 0, "Zepto": 0}}, {"id": "RTC2825", "name": "Naveen Kumar V", "tl": "Sumit", "zone": "South", "numClients": 1, "storesTotal": 3, "storesByClient": {"Blinkit": 0, "FK Min": 0, "BB Now": 0, "Instamart": 0, "First Club": 3, "Rapido": 0, "Zepto": 0}, "slab": "Bottom FR", "wauTotal": 27, "wauByClient": {"Blinkit": 0, "FK Min": 0, "BB Now": 0, "Instamart": 0, "First Club": 27, "Rapido": 0, "Zepto": 0}}, {"id": "RTC2664", "name": "Joshua", "tl": "Sumit", "zone": "South", "numClients": 1, "storesTotal": 6, "storesByClient": {"Blinkit": 0, "FK Min": 0, "BB Now": 0, "Instamart": 0, "First Club": 6, "Rapido": 0, "Zepto": 0}, "slab": "Bottom FR", "wauTotal": 36, "wauByClient": {"Blinkit": 0, "FK Min": 0, "BB Now": 0, "Instamart": 0, "First Club": 36, "Rapido": 0, "Zepto": 0}}, {"id": "", "name": "Himansu Sekhar Sahoo", "tl": "Sumit", "zone": "South", "numClients": 1, "storesTotal": 2, "storesByClient": {"Blinkit": 0, "FK Min": 0, "BB Now": 0, "Instamart": 0, "First Club": 2, "Rapido": 0, "Zepto": 0}, "slab": "Bottom FR", "wauTotal": 16, "wauByClient": {"Blinkit": 0, "FK Min": 0, "BB Now": 0, "Instamart": 0, "First Club": 16, "Rapido": 0, "Zepto": 0}}, {"id": "", "name": "Madhu M", "tl": "Sumit", "zone": "South", "numClients": 1, "storesTotal": 4, "storesByClient": {"Blinkit": 0, "FK Min": 0, "BB Now": 0, "Instamart": 0, "First Club": 4, "Rapido": 0, "Zepto": 0}, "slab": "Bottom FR", "wauTotal": 38, "wauByClient": {"Blinkit": 0, "FK Min": 0, "BB Now": 0, "Instamart": 0, "First Club": 38, "Rapido": 0, "Zepto": 0}}, {"id": "", "name": "Anil Rampher Agrahari", "tl": "Sumit.W", "zone": "West", "numClients": 0, "storesTotal": 0, "storesByClient": {"Blinkit": 0, "FK Min": 0, "BB Now": 0, "Instamart": 0, "First Club": 0, "Rapido": 0, "Zepto": 0}, "slab": "Bottom FR", "wauTotal": 0, "wauByClient": {"Blinkit": 0, "FK Min": 0, "BB Now": 0, "Instamart": 0, "First Club": 0, "Rapido": 0, "Zepto": 0}}, {"id": "", "name": "Hiten Nagawadiya", "tl": "Sumit.W", "zone": "West", "numClients": 1, "storesTotal": 6, "storesByClient": {"Blinkit": 0, "FK Min": 6, "BB Now": 0, "Instamart": 0, "First Club": 0, "Rapido": 0, "Zepto": 0}, "slab": "Bottom FR", "wauTotal": 13, "wauByClient": {"Blinkit": 0, "FK Min": 13, "BB Now": 0, "Instamart": 0, "First Club": 0, "Rapido": 0, "Zepto": 0}}, {"id": "RTC2816", "name": "Kishor Jadhav", "tl": "Sumit.W", "zone": "West", "numClients": 2, "storesTotal": 15, "storesByClient": {"Blinkit": 12, "FK Min": 0, "BB Now": 0, "Instamart": 3, "First Club": 0, "Rapido": 0, "Zepto": 0}, "slab": "Bottom FR", "wauTotal": 32, "wauByClient": {"Blinkit": 29, "FK Min": 0, "BB Now": 0, "Instamart": 3, "First Club": 0, "Rapido": 0, "Zepto": 0}}];
+
+// TL colors (chart series) + FR-sheet client name -> main-dashboard client name mapping
+const TL_COLORS = {
+  'Devender Lodhi':'#3B8AFF','Nasim':'#00C896','Sahil':'#FF8C00','Shyam Nandan':'#9B59B6',
+  'Sudharshan R':'#F5D40A','Sumit':'#FF4D6A','Sumit.W':'#4CAF50'
+};
+const TL_CLIENT_MAP = {'Blinkit':'Blinkit','FK Min':'FK Minutes','BB Now':'BB Now','Instamart':'Instamart','First Club':'Frist Club','Rapido':'Rapido','Zepto':'Zepto'};
+
+// ══════════════════════════════════════════════════════════════════════
+// STATE
+// ══════════════════════════════════════════════════════════════════════
+let activeView = 'client'; // client | city | weekly | revenue
+let dayMode = 'daily';     // daily | weekly
+let selectedDate = '12-Aug-2026';
+let selectedWeekIdx = 0;   // 0=W-1
+let selectedCity = '';
+let selectedZone = '';
+let trendMetric = 'opd';
+let frTlFilter = '';       // '' = all TLs
+let frSortCol = 'wauTotal';
+let frSortDir = -1;        // -1 desc, 1 asc
+
+// ── Build date lookup ──────────────────────────────────────────────────
+function pDate(s){const m={Jan:0,Feb:1,Mar:2,Apr:3,May:4,Jun:5,Jul:6,Aug:7,Sep:8,Oct:9,Nov:10,Dec:11};const p=s.split('-');return new Date(2026,m[p[1]],parseInt(p[0]));}
+const dLookup={};
+for(const r of DAILY_RAW){if(!dLookup[r.date])dLookup[r.date]={};dLookup[r.date][r.client]={opd:r.opd,dau:r.dau,fod:r.fod};}
+const allDates=Object.keys(dLookup).sort((a,b)=>pDate(b)-pDate(a));
+
+// ── Helpers ────────────────────────────────────────────────────────────
+function fmt(n){if(!n&&n!==0||isNaN(n))return'—';if(n===0)return'—';if(n>=10000000)return'₹'+(n/10000000).toFixed(2)+'Cr';if(n>=100000)return(n/100000).toFixed(1)+'L';if(n>=1000)return n.toLocaleString('en-IN');return''+n;}
+// FOD cell: current week vs previous week, color-coded, prev in brackets
+function fodCell(cur, prev){
+  if(!cur&&cur!==0)return'<span style="color:var(--text-dim)">—</span>';
+  const c=Math.round(cur), p=Math.round(prev||0);
+  const isUp=c>p, isDown=c<p;
+  const col=isUp?'var(--up)':isDown?'var(--down)':'var(--text)';
+  const prevPart=p?` <span style="color:var(--text-dim);font-size:10px;font-weight:400">(${p})</span>`:'';
+  return `<span style="color:${col};font-weight:700">${c}</span>${prevPart}`;
+}
+function fmtN(n){if(!n||isNaN(n))return'—';if(n>=100000)return(n/100000).toFixed(1)+'L';if(n>=1000)return n.toLocaleString('en-IN');return''+n;}
+function fmtRev(n){if(!n||n===0)return'<span style="color:var(--text-dim);font-size:9.5px;font-style:italic">Pending</span>';if(n>=10000000)return'₹'+(n/10000000).toFixed(2)+'Cr';if(n>=100000)return'₹'+(n/100000).toFixed(1)+'L';return'₹'+n.toLocaleString('en-IN');}
+function pct(a,b){if(!b)return null;return((a-b)/b*100).toFixed(1);}
+function dc(v){if(v===null||v===undefined)return'flat';return parseFloat(v)>=0?'up':'down';}
+function ds(v){if(v===null||v===undefined)return'—';return(parseFloat(v)>=0?'▲':'▼')+Math.abs(parseFloat(v))+'%';}
+function attCls(s){if(!s||s==='—')return'';const n=parseInt(s);if(n>40)return'att-hi';if(n>20)return'att-mid';return'att-ok';}
+
+// ══════════════════════════════════════════════════════════════════════
+// FR PERFORMANCE — sourced from QC_FRs Master Tracker "#Stores & Clients_FR Wise" tab
+// Note: the sheet's own per-TL "FRs Count" cell (45 total) undercounts vs the actual
+// FR roster listed in the same tab (51 rows) — Sumit shows 7 vs 10 listed, Sumit.W
+// shows 1 vs 4 listed. Stores-mapped and WAU totals reconcile exactly against the
+// roster in both cases, so this view derives FR counts/slab splits from the roster
+// (FR_LIST) rather than the sheet's stated count, and flags the mismatch below.
+// ══════════════════════════════════════════════════════════════════════
+function slabBadge(slab){
+  const cls = slab==='Top FR'?'slab-top':slab==='Bottom FR'?'slab-bottom':'slab-avg';
+  return `<span class="slab-badge ${cls}">${slab||'—'}</span>`;
+}
+function frRosterStats(tl){
+  const rows = tl ? FR_LIST.filter(f=>f.tl===tl) : FR_LIST;
+  return {
+    count: rows.length,
+    stores: rows.reduce((s,f)=>s+f.storesTotal,0),
+    wau: rows.reduce((s,f)=>s+f.wauTotal,0),
+    top: rows.filter(f=>f.slab==='Top FR').length,
+    avg: rows.filter(f=>f.slab==='Avg Performers').length,
+    bottom: rows.filter(f=>f.slab==='Bottom FR').length,
+  };
+}
+function sortFRTable(col){
+  if(frSortCol===col) frSortDir*=-1; else {frSortCol=col; frSortDir=col==='name'||col==='tl'||col==='zone'||col==='slab'?1:-1;}
+  document.getElementById('fr-view').innerHTML=buildFRHTML();
+}
+function setFrTlFilter(tl){
+  frTlFilter=tl;
+  document.getElementById('fr-view').innerHTML=buildFRHTML();
+}
+function sortedFRList(){
+  let rows = frTlFilter ? FR_LIST.filter(f=>f.tl===frTlFilter) : FR_LIST.slice();
+  const slabRank={'Top FR':2,'Avg Performers':1,'Bottom FR':0};
+  rows.sort((a,b)=>{
+    let av=a[frSortCol], bv=b[frSortCol];
+    if(frSortCol==='slab'){av=slabRank[a.slab]??-1; bv=slabRank[b.slab]??-1;}
+    if(typeof av==='string') return av.localeCompare(bv)*frSortDir;
+    return ((av||0)-(bv||0))*frSortDir;
+  });
+  return rows;
+}
+function frSortArrow(col){return frSortCol===col?(frSortDir===1?' ▲':' ▼'):'';}
+
+function buildTLSummaryTable(){
+  const all = frRosterStats(null);
+  let tlRows = FR_TL_SUMMARY.map(t=>{
+    const r = frRosterStats(t.tl);
+    return `<tr><td><div class="cname">${t.tl}</div></td><td>${t.zone}</td><td>${r.count}</td><td>${fmtN(r.stores)}</td><td>${fmtN(r.wau)}</td>
+      <td style="color:var(--up);font-weight:700">${r.top}</td><td style="color:#FFC400;font-weight:700">${r.avg}</td><td style="color:var(--down);font-weight:700">${r.bottom}</td></tr>`;
+  }).join('');
+  const tlTotalRow = `<tr class="tr"><td><div class="cname"><div class="cdot" style="background:#3B8AFF"></div>TOTAL</div></td><td>—</td><td>${all.count}</td><td>${fmtN(all.stores)}</td><td>${fmtN(all.wau)}</td>
+    <td style="color:var(--up);font-weight:700">${all.top}</td><td style="color:#FFC400;font-weight:700">${all.avg}</td><td style="color:var(--down);font-weight:700">${all.bottom}</td></tr>`;
+  return `<div class="tw"><div class="tw-top"><span class="tw-title">TL-Wise FR Performance</span></div><div class="ts"><table>
+    <thead><tr><th>TL NAME</th><th>ZONE</th><th>FRs</th><th>STORES MAPPED</th><th>WAU</th><th>TOP</th><th>AVG</th><th>BOTTOM</th></tr></thead>
+    <tbody>${tlTotalRow}${tlRows}</tbody></table></div>
+    <div class="fr-note">Sheet's own "FRs Count" cell reads 45 total (Sumit: 7, Sumit.W: 1) — undercounts vs the actual roster below (51 rows; Sumit: 10, Sumit.W: 4). Stores-mapped and WAU totals reconcile exactly against the roster either way, so FR/Top/Avg/Bottom counts here are computed from the roster, not the sheet's stated count.</div>
+  </div>`;
+}
+
+// ══════════════════════════════════════════════════════════════════════
+// TL WISE TREND — models each TL's weekly OPD/DAU/WAU/FOD/Revenue by
+// allocating the client-level weekly totals (W object) using that TL's
+// current share of each client's WAU (from FR_TL_SUMMARY). Same proportional
+// -allocation approach the City Dashboard already uses (CITY_CLIENT_SHARE).
+// This is a MODEL, not sheet-sourced TL-level history — flagged in the UI.
+// ══════════════════════════════════════════════════════════════════════
+function tlClientShare(tl, frClient){
+  const totalAcrossTLs = FR_TL_SUMMARY.reduce((s,t)=>s+(t.wauByClient[frClient]||0),0);
+  if(!totalAcrossTLs) return 0;
+  const t = FR_TL_SUMMARY.find(x=>x.tl===tl);
+  return (t.wauByClient[frClient]||0)/totalAcrossTLs;
+}
+function tlWeeklyEstimate(tl, metric, weekIdx){
+  let sum=0;
+  FR_CLIENTS.forEach(frClient=>{
+    const wClient = TL_CLIENT_MAP[frClient];
+    const share = tlClientShare(tl, frClient);
+    if(!share) return;
+    const arr = W[metric][wClient];
+    const val = arr ? (arr[weekIdx]||0) : 0;
+    sum += share*val;
+  });
+  return Math.round(sum);
+}
+function svgTLTrendChart(metric, label, fmtFn){
+  const weekIdxOrder=[3,2,1,0]; // W27→W30, chronological left-to-right
+  const weekLabels=weekIdxOrder.map(i=>W.labels[i]);
+  const series=FR_TL_SUMMARY.map(t=>({tl:t.tl,color:TL_COLORS[t.tl]||'#888',values:weekIdxOrder.map(i=>tlWeeklyEstimate(t.tl,metric,i))}));
+  const allVals=series.flatMap(s=>s.values);
+  const maxV=Math.max(...allVals,1);
+  const Wd=860,Ht=200,padL=54,padR=16,padT=14,padB=26;
+  const plotW=Wd-padL-padR, plotH=Ht-padT-padB;
+  const x=i=>padL+(i/(weekLabels.length-1))*plotW;
+  const y=v=>padT+plotH-(v/maxV)*plotH;
+  let svg=`<svg viewBox="0 0 ${Wd} ${Ht}" width="100%" style="max-width:${Wd}px;display:block">`;
+  for(let g=0;g<=4;g++){
+    const gy=padT+plotH-(g/4)*plotH;
+    const gv=Math.round((g/4)*maxV);
+    svg+=`<line x1="${padL}" y1="${gy}" x2="${Wd-padR}" y2="${gy}" stroke="var(--border)" stroke-width="1"/>`;
+    svg+=`<text x="${padL-8}" y="${gy+3}" font-size="9" fill="var(--text-dim)" text-anchor="end">${fmtN(gv)}</text>`;
+  }
+  weekLabels.forEach((wl,i)=>{svg+=`<text x="${x(i)}" y="${Ht-8}" font-size="10" fill="var(--text-muted)" text-anchor="middle">${wl}</text>`;});
+  series.forEach(s=>{
+    const pts=s.values.map((v,i)=>`${x(i)},${y(v)}`).join(' ');
+    svg+=`<polyline points="${pts}" fill="none" stroke="${s.color}" stroke-width="2"/>`;
+    s.values.forEach((v,i)=>{svg+=`<circle cx="${x(i)}" cy="${y(v)}" r="3" fill="${s.color}"><title>${s.tl}: ${fmtFn(v)} (${weekLabels[i]})</title></circle>`;});
+  });
+  svg+='</svg>';
+  const legend=series.map(s=>`<span style="display:inline-flex;align-items:center;gap:4px;margin-right:12px;font-size:10.5px;color:var(--text-muted)"><span style="width:9px;height:9px;border-radius:2px;background:${s.color};display:inline-block"></span>${s.tl}</span>`).join('');
+  const tableRows=series.map(s=>`<tr><td><div class="cname">${s.tl}</div></td>${s.values.map(v=>`<td>${fmtFn(v)}</td>`).join('')}</tr>`).join('');
+  return `<div class="tw"><div class="tw-top"><span class="tw-title">${label} — TL Wise (Last 4 Weeks, Modeled)</span></div>
+    <div style="padding:14px 14px 4px">${svg}<div style="margin-top:6px">${legend}</div></div>
+    <div class="ts"><table><thead><tr><th>TL NAME</th>${weekLabels.map(w=>`<th>${w}</th>`).join('')}</tr></thead><tbody>${tableRows}</tbody></table></div>
+  </div>`;
+}
+function buildTLTrendHTML(){
+  const note=`<div class="fr-note">Modeled, not sheet-sourced: each TL's weekly figure = client-level weekly total (Master Tracker — Weekly Client_Wise) × that TL's current share of each client's WAU (from #Stores &amp; Clients_FR Wise). Assumes each TL's client mix has stayed roughly constant over the last 4 weeks — same allocation method the City Dashboard uses for its weekly view. WAU and Revenue show "—"/"Pending" for W30 since the client-level source data for the current week isn't posted yet.</div>`;
+  const charts=[
+    svgTLTrendChart('opd','Orders (OPD)',fmtN),
+    svgTLTrendChart('fod','First Order Deliveries (FOD)',fmtN),
+    svgTLTrendChart('dau','Daily Active Riders (DAU)',fmtN),
+    svgTLTrendChart('wau','Weekly Active Riders (WAU)',fmtN),
+    svgTLTrendChart('rev','Revenue (₹)',fmtRev),
+  ].join('');
+  return `<div class="sh"><span class="sh-title">TL Wise Trend</span><span class="sh-sub">Last 4 weeks · ${W.labels[3]}–${W.labels[0]}</span></div>${buildTLSummaryTable()}${note}${charts}`;
+}
+
+function buildFRHTML(){
+  const all = frRosterStats(null);
+  const tlNames = FR_TL_SUMMARY.map(t=>t.tl);
+
+  const kpi = `<div class="kpi-row">
+    <div class="kpi c1"><div class="kpi-lbl">Total FRs</div><div class="kpi-val">${all.count}</div><div class="kpi-sub">across ${tlNames.length} TLs</div></div>
+    <div class="kpi c2"><div class="kpi-lbl">Stores Mapped</div><div class="kpi-val">${fmtN(all.stores)}</div><div class="kpi-sub">unique stores, all clients</div></div>
+    <div class="kpi c3"><div class="kpi-lbl">Total WAU</div><div class="kpi-val">${fmtN(all.wau)}</div><div class="kpi-sub">weekly active users</div></div>
+    <div class="kpi" style="border-top:2px solid transparent"><div class="kpi-lbl">Performance Split</div><div class="kpi-val" style="font-size:16px;display:flex;gap:8px;align-items:baseline">
+      <span style="color:var(--up)">${all.top} Top</span><span style="color:#FFC400">${all.avg} Avg</span><span style="color:var(--down)">${all.bottom} Bottom</span>
+    </div><div class="kpi-sub">WAU-based slab (0–49 Bottom · 50–74 Avg · 75+ Top)</div></div>
+  </div>`;
+
+  const tlTable = buildTLSummaryTable();
+
+  // DAU distribution by TL
+  const dauRows = FR_TL_SUMMARY.map(t=>`<tr><td><div class="cname">${t.tl}</div></td><td>${t.zone}</td><td>${t.dauGrt200}</td><td>${t.dau100_199}</td><td>${t.dau50_99}</td><td>${t.dau30_50}</td><td>${t.dauLess30}</td></tr>`).join('');
+  const dauTotal = FR_TL_SUMMARY.reduce((s,t)=>({g:s.g+t.dauGrt200,a:s.a+t.dau100_199,b:s.b+t.dau50_99,c:s.c+t.dau30_50,d:s.d+t.dauLess30}),{g:0,a:0,b:0,c:0,d:0});
+  const dauTable = `<div class="tw"><div class="tw-top"><span class="tw-title">FR DAU Distribution — TL Wise</span></div><div class="ts"><table>
+    <thead><tr><th>TL NAME</th><th>ZONE</th><th>&gt;200 DAU</th><th>100–199</th><th>50–99</th><th>30–50</th><th>&lt;30</th></tr></thead>
+    <tbody><tr class="tr"><td><div class="cname"><div class="cdot" style="background:#3B8AFF"></div>TOTAL</div></td><td>—</td><td>${dauTotal.g}</td><td>${dauTotal.a}</td><td>${dauTotal.b}</td><td>${dauTotal.c}</td><td>${dauTotal.d}</td></tr>${dauRows}</tbody></table></div></div>`;
+
+  // Stores mapped by client — TL wise
+  const storeRows = FR_TL_SUMMARY.map(t=>`<tr><td><div class="cname">${t.tl}</div></td>${FR_CLIENTS.map(c=>`<td>${fmtN(t.storesByClient[c])}</td>`).join('')}<td style="font-weight:700">${fmtN(t.storesTotal)}</td></tr>`).join('');
+  const storeTotals = FR_CLIENTS.map(c=>FR_TL_SUMMARY.reduce((s,t)=>s+t.storesByClient[c],0));
+  const storeTable = `<div class="tw"><div class="tw-top"><span class="tw-title">Stores Mapped by Client — TL Wise</span></div><div class="ts"><table>
+    <thead><tr><th>TL NAME</th>${FR_CLIENTS.map(c=>`<th>${c.toUpperCase()}</th>`).join('')}<th>TOTAL</th></tr></thead>
+    <tbody><tr class="tr"><td><div class="cname"><div class="cdot" style="background:#3B8AFF"></div>TOTAL</div></td>${storeTotals.map(v=>`<td>${fmtN(v)}</td>`).join('')}<td style="font-weight:700">${fmtN(all.stores)}</td></tr>${storeRows}</tbody></table></div></div>`;
+
+  // FR roster — sortable, filterable by TL
+  const tlFilters = `<button class="fr-tl-filter${!frTlFilter?' active':''}" onclick="setFrTlFilter('')">All TLs</button>`+
+    tlNames.map(tl=>`<button class="fr-tl-filter${frTlFilter===tl?' active':''}" onclick="setFrTlFilter('${tl}')">${tl}</button>`).join('');
+  const roster = sortedFRList();
+  const rosterRows = roster.map(f=>`<tr><td>${f.id||'—'}</td><td><div class="cname">${f.name}</div></td><td>${f.tl}</td><td>${f.zone}</td><td>${f.numClients}</td><td>${fmtN(f.storesTotal)}</td><td>${fmtN(f.wauTotal)}</td><td>${slabBadge(f.slab)}</td></tr>`).join('');
+  const cols=[['id','ID'],['name','NAME'],['tl','TL'],['zone','ZONE'],['numClients','#CLIENTS'],['storesTotal','STORES'],['wauTotal','WAU'],['slab','SLAB']];
+  const rosterHead = cols.map(([key,lbl])=>`<th class="fr-th-sort" onclick="sortFRTable('${key}')">${lbl}${frSortArrow(key)}</th>`).join('');
+  const rosterTable = `<div class="tw"><div class="tw-top"><span class="tw-title">FR Roster — ${roster.length} of ${all.count}</span><div class="mtabs" style="display:flex;gap:5px;flex-wrap:wrap;max-width:70%;justify-content:flex-end">${tlFilters}</div></div><div class="ts"><table>
+    <thead><tr>${rosterHead}</tr></thead><tbody>${rosterRows}</tbody></table></div></div>`;
+
+  return `<div class="sh"><span class="sh-title">FR Performance</span><span class="sh-sub">Live snapshot · Master Tracker — #Stores &amp; Clients_FR Wise</span></div>${kpi}${tlTable}${dauTable}${storeTable}${rosterTable}`;
+}
+
+// ══════════════════════════════════════════════════════════════════════
+// CITY FILTER
+// ══════════════════════════════════════════════════════════════════════
+function populateCities(){
+  const zone=document.getElementById('zoneSelect').value;
+  const cities=zone?CITY_DATA.filter(c=>c.zone===zone).map(c=>c.city):CITY_DATA.map(c=>c.city);
+  const sel=document.getElementById('citySelect');
+  sel.innerHTML='<option value="" style="color:#000">All Cities</option>'+cities.map(c=>`<option value="${c}" style="color:#000">${c}</option>`).join('');
+  if(selectedCity&&!cities.includes(selectedCity))selectedCity='';
+  sel.value=selectedCity;
+}
+function applyFilters(){
+  selectedZone=document.getElementById('zoneSelect').value;
+  populateCities();
+  selectedCity=document.getElementById('citySelect').value;
+  document.getElementById('ins-filter').textContent=selectedCity||selectedZone||'All India';
+  render();
+}
+function setZoneClick(z){
+  selectedZone=z; selectedCity='';
+  document.getElementById('zoneSelect').value=z;
+  populateCities();
+  document.getElementById('ins-filter').textContent=z;
+  // Switch to city view
+  document.querySelectorAll('.ni').forEach(n=>n.classList.remove('active'));
+  document.querySelectorAll('.ni')[1].classList.add('active');
+  activeView='city';
+  document.getElementById('viewTitle').textContent='City Dashboard';
+  render();
+}
+function selectCityCard(city){
+  selectedCity=city;
+  document.getElementById('citySelect').value=city;
+  document.getElementById('ins-filter').textContent=city;
+  render();
+}
+
+// ══════════════════════════════════════════════════════════════════════
+// BARS
+// ══════════════════════════════════════════════════════════════════════
+function renderBars(){
+  // DATE BAR — always shown
+  const dbar=document.getElementById('dateBar');
+  const wbar=document.getElementById('weekBar');
+
+  // Date pills — hide if weekly view + weekly dash selected
+  const showDates=(activeView==='client'||activeView==='city');
+  dbar.style.display=showDates?'flex':'none';
+
+  if(showDates){
+    dbar.innerHTML='<span class="bar-label">Daily</span>'+allDates.slice(0,14).map(d=>`<button class="date-pill${d===selectedDate?' active':''}" onclick="pickDate('${d}')">${d.replace('-2026','')}</button>`).join('');
+  }
+
+  // Week pills — always visible below
+  wbar.innerHTML='<span class="bar-label">Week</span>'+W.labels.map((w,i)=>`
+    <button class="week-pill${dayMode==='weekly'&&selectedWeekIdx===i?' active':''}" onclick="pickWeek(${i})" title="${w} · ${W.dates[i]}">${w} <span style="opacity:.5;font-size:9px;font-weight:400">${W.dates[i]}</span></button>
+  `).join('');
+}
+
+function pickDate(d){selectedDate=d;dayMode='daily';document.querySelectorAll('#viewToggle .vtab').forEach((t,i)=>t.classList.toggle('active',i===0));render();}
+function pickWeek(i){selectedWeekIdx=i;dayMode='weekly';document.querySelectorAll('#viewToggle .vtab').forEach((t,j)=>t.classList.toggle('active',j===1));render();}
+function setDayWeek(m,btn){dayMode=m;document.querySelectorAll('#viewToggle .vtab').forEach(t=>t.classList.remove('active'));btn.classList.add('active');render();}
+
+// ══════════════════════════════════════════════════════════════════════
+// INSIGHTS
+// ══════════════════════════════════════════════════════════════════════
+function renderInsights(){
+  let cur={},prev={};
+  if(dayMode==='daily'){
+    cur=dLookup[selectedDate]||{};
+    prev=dLookup[allDates[allDates.indexOf(selectedDate)+1]]||{};
+  } else {
+    CLIENTS.forEach(c=>{
+      cur[c]=W.opd[c]?{opd:W.opd[c][selectedWeekIdx],dau:W.dau[c][selectedWeekIdx],fod:W.fod[c][selectedWeekIdx]}:{};
+      const pi=selectedWeekIdx+1;
+      prev[c]=W.opd[c]&&pi<6?{opd:W.opd[c][pi],dau:W.dau[c][pi],fod:W.fod[c][pi]}:{};
+    });
+  }
+  let tot=0,ptot=0;
+  CLIENTS.forEach(c=>{if(cur[c])tot+=cur[c].opd||0;if(prev[c])ptot+=prev[c].opd||0;});
+  const dod=pct(tot,ptot);
+  document.getElementById('ins-dod').innerHTML=`<span style="color:var(--${dc(dod)})">${ds(dod)}</span>`;
+  let topC='—',topV=0,gainC='—',gainV=-999,dropC='—',dropV=999;
+  CLIENTS.forEach(c=>{
+    if(cur[c]&&(cur[c].opd||0)>topV){topV=cur[c].opd||0;topC=c;}
+    if(cur[c]&&prev[c]){const d=parseFloat(pct(cur[c].opd||0,prev[c].opd||0));if(!isNaN(d)){if(d>gainV){gainV=d;gainC=c;}if(d<dropV){dropV=d;dropC=c;}}}
+  });
+  document.getElementById('ins-top').textContent=topC!=='—'?`${topC} (${fmtN(topV)})`:'—';
+  document.getElementById('ins-gain').textContent=gainC!=='—'?`${gainC} ▲${gainV}%`:'—';
+  document.getElementById('ins-drop').textContent=dropC!=='—'?`${dropC} ▼${Math.abs(dropV)}%`:'—';
+}
+
+// ══════════════════════════════════════════════════════════════════════
+// EXEC SUMMARY
+// ══════════════════════════════════════════════════════════════════════
+function buildExecHTML(){
+  const fmt=n=>n?Number(n).toLocaleString('en-IN'):'-';
+  const fmtL=n=>n>=1e7?(n/1e7).toFixed(2)+'Cr':n>=1e5?(n/1e5).toFixed(1)+'L':fmt(n);
+  const weeks=['W22','W23','W24','W25','W26','W27'];
+  const rev={
+    Blinkit:    [3840805,3825815,4041104,4116245,4000417,4446453],
+    Zepto:      [12467181,12209794,11281831,11331784,10039238,11083510],
+    'FK Min':   [3305879,3394733,3453110,3573850,3482723,4138155],
+    'BB Now':   [0,0,65,485,60106,3473100],
+    Rapido:     [5286387,5600651,5784174,6757991,6697047,4813676],
+    Instamart:  [597015,491039,569293,472004,426474,433447],
+    'First Club':[1764591,1821332,2149934,1797102,2337323,2199366],
+    'Uber 1P':  [2548696,2695063,2703538,2971351,3277174,3571301],
+    Ownly:      [115300,92100,109420,125440,116900,45600],
+  };
+  const opd={
+    Blinkit:    [79336,80392,89091,89311,87832,93478],
+    Zepto:      [281837,270841,259355,245916,214496,219691],
+    'FK Min':   [68747,73241,74340,75350,76014,80793],
+    'BB Now':   [0,0,65,485,60106,64807],
+    Rapido:     [90067,97469,101104,120032,119136,80621],
+    Instamart:  [10405,11477,10503,9199,8475,8281],
+    'First Club':[9809,10650,10669,10832,12822,10343],
+    'Uber 1P':  [34658,37294,37140,41537,46315,50588],
+    Ownly:      [1137,920,1074,1236,1198,577],
+  };
+  const wau={
+    Blinkit:    [955,999,1012,1034,1038,1035],
+    Zepto:      [2381,2241,2136,2110,1964,2106],
+    'FK Min':   [865,844,843,901,866,961],
+    'BB Now':   [0,0,65,485,60106,661],
+    Rapido:     [4473,4780,4576,5987,5820,4652],
+    Instamart:  [108,99,125,109,93,111],
+    'First Club':[220,235,286,277,308,0],
+    'Uber 1P':  [959,992,1033,1130,1179,1162],
+    Ownly:      [11,11,10,10,10,12],
+  };
+  const wauAttr={
+    Total:       ['18%','20%','19%'],
+    Blinkit:     ['17%','17%','17%'],
+    'FK Min':    ['12%','17%','15%'],
+    'BB Now':    ['17%','17%','15%'],
+    Instamart:   ['47%','46%','35%'],
+    'First Club':['16%','17%','12%'],
+    Rapido:      ['25%','24%','27%'],
+    Zepto:       ['12%','19%','12%'],
+  };
+  const fodAttr={
+    Total:       ['35%','34%','34%'],
+    Blinkit:     ['29%','25%','31%'],
+    'FK Min':    ['23%','33%','37%'],
+    'BB Now':    ['37%','42%','53%'],
+    Instamart:   ['67%','65%','47%'],
+    'First Club':['25%','28%','4%'],
+    Rapido:      ['41%','38%','36%'],
+    Zepto:       ['28%','26%','28%'],
+  };
+  const gmcm=[
+    {tl:'Devender Lodhi',fr:7,rev:20018138,gm:1103030,gmp:'5.5%',cm:924201,cmp:'4.6%'},
+    {tl:'Nasim',fr:1,rev:8187353,gm:459236,gmp:'5.6%',cm:434837,cmp:'5.3%'},
+    {tl:'Sahil',fr:13,rev:15017102,gm:718272,gmp:'4.8%',cm:259695,cmp:'1.7%'},
+    {tl:'Shyam Nandan',fr:11,rev:10203214,gm:627797,gmp:'6.2%',cm:265731,cmp:'2.6%'},
+    {tl:'Sudharshan R',fr:1,rev:9758799,gm:508753,gmp:'5.2%',cm:457453,cmp:'4.7%'},
+    {tl:'Sumit',fr:8,rev:19300000,gm:1010356,gmp:'5.7%',cm:783156,cmp:'4.4%'},
+    {tl:'Sumit.W',fr:2,rev:1488731,gm:79964,gmp:'5.4%',cm:19364,cmp:'1.3%'},
+  ];
+
+  function chgCls(v,prev,higherBetter){
+    if(!prev||!v) return '';
+    const pct=Math.abs((v-prev)/prev);
+    if(pct<0.01) return 'es-amber';
+    if(higherBetter) return v>prev?'es-up':'es-dn';
+    return v<prev?'es-up':'es-dn';
+  }
+
+  function mkTable(title,data,fmt2,note){
+    const clients=Object.keys(data);
+    const totals=weeks.map((_,wi)=>clients.reduce((s,c)=>s+(data[c][wi]||0),0));
+    let h=`<div class="es-section"><div class="es-sec-title">${title}</div>`;
+    if(note) h+=`<div class="es-note">${note}</div>`;
+    h+=`<div class="es-table-wrap"><table class="es-table"><thead><tr><th>Client</th>${weeks.map(w=>`<th>${w}</th>`).join('')}</tr></thead><tbody>`;
+    for(const c of clients){
+      const vals=data[c];
+      h+=`<tr><td class="es-client">${c}</td>`;
+      for(let wi=0;wi<weeks.length;wi++){
+        const v=vals[wi];
+        const cls=wi>0?chgCls(v,vals[wi-1],true):'';
+        h+=`<td class="${cls}">${v?fmt2(v):'-'}</td>`;
+      }
+      h+='</tr>';
+    }
+    h+=`<tr class="es-total"><td>TOTAL</td>`;
+    for(let wi=0;wi<weeks.length;wi++){
+      const v=totals[wi];
+      const cls='es-total-cell'+(wi>0?' '+chgCls(v,totals[wi-1],true):'');
+      h+=`<td class="${cls}">${fmt2(v)}</td>`;
+    }
+    h+='</tr></tbody></table></div></div>';
+    return h;
+  }
+
+  function mkAttrTable(title,data,cols,colLabels){
+    const clients=Object.keys(data);
+    let h=`<div class="es-section"><div class="es-sec-title">${title}</div>`;
+    h+=`<div class="es-note">Attrition = riders who did not ride in the current week vs. previous week base. Lower % = better. W28/W29 excluded (ongoing).</div>`;
+    h+=`<div class="es-table-wrap"><table class="es-table"><thead><tr><th>Client</th>${colLabels.map(l=>`<th>${l}</th>`).join('')}</tr></thead><tbody>`;
+    for(const c of clients){
+      const vals=data[c];
+      h+=`<tr><td class="es-client">${c}</td>`;
+      for(let i=0;i<vals.length;i++){
+        const pct=parseInt(vals[i]);
+        const prev=i>0?parseInt(data[c][i-1]):null;
+        let cls='';
+        if(prev!==null){
+          const diff=Math.abs(pct-prev);
+          cls=diff<1?'es-amber':(pct<prev?'es-up':'es-dn');
+        }
+        h+=`<td class="${cls}">${vals[i]}</td>`;
+      }
+      h+='</tr>';
+    }
+    h+='</tbody></table></div></div>';
+    return h;
+  }
+
+  // Build Zepto section 2 table dynamically from actual data
+  function mkZeptoRow(label,vals,fmtFn){
+    let row=`<tr><td class="es-client">${label}</td>`;
+    for(let wi=0;wi<weeks.length;wi++){
+      const v=vals[wi];const prev=vals[wi-1];
+      const cls=wi>0?chgCls(v,prev,true):'';
+      row+=`<td class="${cls}">${fmtFn(v)}</td>`;
+    }
+    return row+'</tr>';
+  }
+
+  const s=`
+<div class="exec-summary">
+  <div class="es-cover">
+    <div class="es-logo-bar"><span class="es-logo-badge">QC</span><span class="es-logo-text">Quick Commerce — Loadshare Networks</span></div>
+    <div class="es-cover-title">Executive Summary</div>
+    <div class="es-cover-meta"><span class="es-meta-pill">W22 – W27</span><span class="es-meta-pill">Data as of W27</span></div>
+  </div>
+
+  <div class="es-section-header"><span class="es-sec-num">01</span> Weekly Performance</div>
+
+  ${mkTable('Revenue (₹)',rev,fmtL)}
+  <div class="es-hits">
+    <div class="es-hit-good" contenteditable="true" spellcheck="false">✅ Uber 1P showing consistent revenue growth every week (W22→W27 +40%). FK Min had a strong W27 recovery (+19% WoW). Blinkit also recovered strongly in W27.</div>
+    <div class="es-hit-bad" contenteditable="true" spellcheck="false">⚠ Zepto revenue declining from W22 peak of ₹1.25Cr to ₹1.11Cr in W27 — partly driven by untagging of riders. Rapido fell sharply in W27 (₹48.1L vs ₹66.9L in W26). BB Now missing W27 data.</div>
+  </div>
+
+  ${mkTable('Orders',opd,fmt)}
+  <div class="es-hits">
+    <div class="es-hit-good" contenteditable="true" spellcheck="false">✅ Blinkit orders grew steadily from 79K (W22) to 93K (W27). Uber 1P grew from 35K to 51K — consistent trajectory.</div>
+    <div class="es-hit-bad" contenteditable="true" spellcheck="false">⚠ Zepto orders down from 2.82L (W22) to 2.20L (W27) — significant volume loss. Rapido dropped from 1.19L (W26) to 80.6K (W27).</div>
+  </div>
+
+  ${mkTable('WAU (Weekly Active Riders)',wau,fmt)}
+  <div class="es-hits">
+    <div class="es-hit-good" contenteditable="true" spellcheck="false">✅ Blinkit WAU stable and growing (955→1,035). Uber 1P consistent growth (959→1,162).</div>
+    <div class="es-hit-bad" contenteditable="true" spellcheck="false">⚠ Zepto WAU declining — from 2,381 in W22 to 2,106 in W27. Rapido WAU collapsed from 5,987 (W25) to 4,652 (W27) likely due to operational re-org.</div>
+  </div>
+
+  <div class="es-section-header"><span class="es-sec-num">02</span> Zepto Risk Flag</div>
+  <div class="es-section">
+    <div class="es-alert">⚠ Critical: Zepto has been untagging our riders — any rider who raised a payout concern was retagged directly to Zepto. Shyam escalated; Zepto confirmed on a call. Monitor tagged rider count each week.</div>
+    <div class="es-table-wrap"><table class="es-table"><thead><tr><th>Metric</th>${weeks.map(w=>`<th>${w}</th>`).join('')}</tr></thead><tbody>
+      ${mkZeptoRow('WAU',wau['Zepto'],fmt)}
+      ${mkZeptoRow('Orders',opd['Zepto'],fmt)}
+      ${mkZeptoRow('Revenue (₹)',rev['Zepto'],fmtL)}
+    </tbody></table></div>
+    <div class="es-hits">
+      <div class="es-hit-bad" contenteditable="true" spellcheck="false">⚠ Zepto is in a clear declining trend across WAU, orders, and revenue since W22. W27 shows a small recovery — needs close monitoring. The untagging risk directly inflates the apparent attrition rate.</div>
+    </div>
+  </div>
+
+  <div class="es-section-header"><span class="es-sec-num">03</span> GM &amp; CM by Team Lead</div>
+  <div class="es-section">
+    <div class="es-note">Benchmarks: GM ~6–7% is healthy &nbsp;·&nbsp; CM ~3%+ after salaries is healthy &nbsp;·&nbsp; CM% coloured green ≥3%, red &lt;3%</div>
+    <div class="es-table-wrap"><table class="es-table"><thead><tr><th>Team Lead</th><th>FR Count</th><th>Revenue</th><th>GM</th><th>GM%</th><th>CM</th><th>CM%</th></tr></thead><tbody>
+      ${gmcm.map(d=>{const cmOk=parseFloat(d.cmp)>=3;return`<tr><td class="es-client">${d.tl}</td><td>${d.fr}</td><td>${fmtL(d.rev)}</td><td>${fmtL(d.gm)}</td><td>${d.gmp}</td><td>${fmtL(d.cm)}</td><td class="${cmOk?'es-up':'es-dn'}">${d.cmp}</td></tr>`;}).join('')}
+    </tbody></table></div>
+    <div class="es-hits">
+      <div class="es-hit-good" contenteditable="true" spellcheck="false">✅ Devender Lodhi, Nasim, Sudharshan R, and Sumit all at CM% ≥4.4% — strong margins. Sumit runs the highest absolute revenue book (~₹1.93Cr).</div>
+      <div class="es-hit-bad" contenteditable="true" spellcheck="false">⚠ Sahil and Sumit.W below 3% CM — needs attention. Shyam Nandan at 2.6% just below threshold — salary structure review recommended.</div>
+    </div>
+  </div>
+
+  <div class="es-section-header"><span class="es-sec-num">04</span> WAU &amp; FOD Attrition</div>
+  ${mkAttrTable('WAU Attrition % by Client',wauAttr,[],['W24→W25','W25→W26','W26→W27'])}
+  <div class="es-hits">
+    <div class="es-hit-good" contenteditable="true" spellcheck="false">✅ Zepto WAU attrition improving: 19%→12% in W27. First Club also improved to 12%. Blinkit stable at 17%.</div>
+    <div class="es-hit-bad" contenteditable="true" spellcheck="false">⚠ Instamart attrition very high (35–47%) consistently — small pool but churn is problematic. Rapido attrition elevated at 27% in W27.</div>
+  </div>
+  ${mkAttrTable('FOD (First Order Delivery) Attrition % by Client',fodAttr,[],['W24→W25','W25→W26','W26→W27'])}
+  <div class="es-hits">
+    <div class="es-hit-good" contenteditable="true" spellcheck="false">✅ First Club FOD attrition dropped dramatically to 4% in W27 (from 28% in W26) — significant improvement.</div>
+    <div class="es-hit-bad" contenteditable="true" spellcheck="false">⚠ BB Now FOD attrition rising sharply (37%→53%) — new riders not completing first orders. Instamart FOD at 47% — onboarding quality issue. FK Min FOD rising (23%→37%).</div>
+  </div>
+
+  <div class="es-section-header"><span class="es-sec-num">05</span> FR Performance — TL Wise</div>
+  <div class="es-section">
+    <div class="es-note">Live snapshot (not tied to W22–W27) · Source: QC_FRs Master Tracker — #Stores &amp; Clients_FR Wise tab · Slab: WAU 0–49 Bottom · 50–74 Avg · 75+ Top</div>
+    <div class="es-table-wrap"><table class="es-table"><thead><tr><th>Team Lead</th><th>Zone</th><th>FRs</th><th>Stores Mapped</th><th>WAU</th><th>Top</th><th>Avg</th><th>Bottom</th></tr></thead><tbody>
+      ${(()=>{const a=frRosterStats(null);return`<tr class="es-total"><td class="es-client">TOTAL</td><td>—</td><td>${a.count}</td><td>${fmt(a.stores)}</td><td>${fmt(a.wau)}</td><td class="es-total-cell es-up">${a.top}</td><td class="es-total-cell es-amber">${a.avg}</td><td class="es-total-cell es-dn">${a.bottom}</td></tr>`;})()}
+      ${FR_TL_SUMMARY.map(t=>{const r=frRosterStats(t.tl);return`<tr><td class="es-client">${t.tl}</td><td>${t.zone}</td><td>${r.count}</td><td>${fmt(r.stores)}</td><td>${fmt(r.wau)}</td><td class="es-up">${r.top}</td><td class="es-amber">${r.avg}</td><td class="es-dn">${r.bottom}</td></tr>`;}).join('')}
+    </tbody></table></div>
+    <div class="es-hits">
+      <div class="es-hit-good" contenteditable="true" spellcheck="false">✅ Devender Lodhi (4 Top / 2 Bottom) and Sudharshan R (2 Top / 0 Bottom) show the healthiest FR performance mix. Sudharshan R's 2 FRs alone drive 1,496 WAU — the highest per-FR productivity in the roster (Zepto-mapped).</div>
+      <div class="es-hit-bad" contenteditable="true" spellcheck="false">⚠ Sahil's team has both the most FRs (17) and the most Bottom-slab FRs (10, ~59%), concentrated in North zone — worth a closer look. Sumit.W has zero Top-performing FRs among its 4 mapped FRs.</div>
+    </div>
+  </div>
+
+</div>
+<style>
+.exec-summary{padding:24px 32px;max-width:1100px;margin:0 auto;font-family:inherit;background:#fff;color:#1e293b}
+/* Cover */
+.es-cover{background:#fff;border:2px solid #F97316;border-radius:10px;padding:24px 28px;margin-bottom:24px;position:relative;overflow:hidden}
+.es-cover::before{content:'';position:absolute;top:0;right:0;width:180px;height:100%;background:linear-gradient(135deg,rgba(249,115,22,.08) 0%,rgba(249,115,22,.03) 100%)}
+.es-logo-bar{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.es-logo-badge{background:#F97316;color:#fff;font-size:11px;font-weight:800;padding:3px 9px;border-radius:4px;letter-spacing:.05em}
+.es-logo-text{font-size:12px;color:#64748b;font-weight:500}
+.es-cover-title{font-size:22px;font-weight:800;color:#1e293b;letter-spacing:-.01em;margin-bottom:12px}
+.es-cover-meta{display:flex;gap:8px;flex-wrap:wrap}
+.es-meta-pill{background:#f1f5f9;color:#475569;font-size:11px;font-weight:600;padding:4px 12px;border-radius:20px;border:1px solid #e2e8f0}
+/* Section headers */
+.es-section-header{display:flex;align-items:center;gap:10px;font-size:12.5px;font-weight:700;color:#F97316;text-transform:uppercase;letter-spacing:.08em;margin:28px 0 12px;padding-bottom:8px;border-bottom:2px solid #F97316}
+.es-sec-num{background:#F97316;color:#fff;font-size:10px;font-weight:800;padding:2px 7px;border-radius:4px;letter-spacing:.05em}
+/* Section cards */
+.es-section{background:#fafafa;border:1px solid #e2e8f0;border-radius:8px;padding:16px 20px;margin-bottom:14px}
+.es-sec-title{font-size:11.5px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:.07em;margin-bottom:10px}
+.es-note{font-size:11px;color:#94a3b8;margin-bottom:10px;line-height:1.5}
+/* Tables */
+.es-table-wrap{overflow-x:auto}
+.es-table{width:100%;border-collapse:collapse;font-size:12px;border:1.5px solid #94a3b8}
+.es-table th{background:#f1f5f9;color:#475569;padding:7px 12px;text-align:center;font-weight:700;border:1.5px solid #94a3b8;white-space:nowrap;font-size:11.5px}
+.es-table th:first-child{text-align:left}
+.es-table td{padding:6px 12px;text-align:center;border:1.5px solid #94a3b8;color:#111827}
+.es-table td:first-child{text-align:left}
+.es-table tbody tr:hover td{background:#f8fafc}
+.es-client{font-weight:600;color:#111827;white-space:nowrap}
+.es-up{background:#dcfce7;color:#15803d;font-weight:700;border-radius:4px}
+.es-dn{background:#fee2e2;color:#b91c1c;font-weight:700;border-radius:4px}
+.es-amber{background:#fef3c7;color:#b45309;font-weight:700;border-radius:4px}
+.es-total{background:#f1f5f9}
+.es-total td{font-weight:700;border-top:2px solid #e2e8f0;color:#111827}
+.es-total-cell.es-up{background:#dcfce7;color:#15803d}
+.es-total-cell.es-dn{background:#fee2e2;color:#b91c1c}
+.es-total-cell.es-amber{background:#fef3c7;color:#b45309}
+/* Hits & misses */
+.es-hits{display:flex;flex-direction:column;gap:6px;margin-top:12px}
+.es-hit-good,.es-hit-bad{font-size:12px;line-height:1.6;padding:9px 14px;border-radius:6px;cursor:text;outline:none}
+.es-hit-good{background:#f0fdf4;color:#15803d;border-left:3px solid #22c55e}
+.es-hit-bad{background:#fff7ed;color:#c2410c;border-left:3px solid #F97316}
+.es-hit-good:hover,.es-hit-bad:hover{border-left-width:4px}
+.es-hit-good:focus,.es-hit-bad:focus{outline:1px dashed rgba(249,115,22,.5);outline-offset:2px;border-radius:0 4px 4px 0}
+/* Alert */
+.es-alert{background:#fff7ed;border:1px solid #F97316;border-radius:6px;padding:12px 16px;font-size:12.5px;color:#9a3412;line-height:1.6;margin-bottom:14px;font-weight:500}
+</style>`;
+  return s;
+}
+
+function downloadExecSummary(){
+  const scrollDiv=document.querySelector('#exec-view>div:last-child');
+  const content=scrollDiv?scrollDiv.innerHTML:buildExecHTML();
+  const standalone=`<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>QC Executive Summary — W22–W27 | Loadshare Networks</title><style>*{margin:0;padding:0;box-sizing:border-box}body{font-family:system-ui,-apple-system,sans-serif;background:#07111e;color:#e5e9f0;padding:0}@media print{body{background:#fff;color:#000}}</style></head><body>${content}</body></html>`;
+  const blob=new Blob([standalone],{type:'text/html'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download='QC_Executive_Summary_W22_W27.html';
+  a.click();
+  URL.revokeObjectURL(a.href);
+}
+
+// ══════════════════════════════════════════════════════════════════════
+// NAV / VIEW
+// ══════════════════════════════════════════════════════════════════════
+function setView(v,el){
+  activeView=v;
+  document.querySelectorAll('.ni').forEach(n=>n.classList.remove('active'));
+  el.classList.add('active');
+  const titles={client:'QC Dashboard — LSN',city:'City Dashboard',weekly:'Weekly Summary',revenue:'Revenue Tracker',exec:'Exec Summary — W22–W27',fr:'FR Performance',tltrend:'TL Wise Trend'};
+  document.getElementById('viewTitle').textContent=titles[v]||v;
+  const showToggle=(v==='client'||v==='city');
+  document.getElementById('viewToggle').style.display=showToggle?'flex':'none';
+  const execEl=document.getElementById('exec-view');
+  const frEl=document.getElementById('fr-view');
+  const tlEl=document.getElementById('tltrend-view');
+  const weekBar=document.getElementById('weekBar');
+  const insBar=document.getElementById('insBar');
+  if(v==='exec'){
+    frEl.classList.remove('active'); frEl.style.display='none';
+    tlEl.classList.remove('active'); tlEl.style.display='none';
+    execEl.classList.add('active');
+    const html=buildExecHTML();
+    execEl.innerHTML=`<div style="padding:10px 16px 4px;display:flex;justify-content:flex-end;background:#050e18;border-bottom:1px solid rgba(255,255,255,.08);flex-shrink:0"><button onclick="downloadExecSummary()" style="padding:7px 16px;border-radius:8px;font-size:11.5px;font-weight:700;cursor:pointer;border:1px solid rgba(249,115,22,.5);background:rgba(249,115,22,.15);color:#F97316;font-family:inherit">⬇ Download HTML</button></div><div style="flex:1;overflow-y:auto">${html}</div>`;
+    execEl.style.display='flex';
+    execEl.style.flexDirection='column';
+    document.getElementById('contentArea').style.display='none';
+    weekBar.style.display='none'; insBar.style.display='none';
+  } else if(v==='fr'){
+    execEl.classList.remove('active'); execEl.style.display='none';
+    tlEl.classList.remove('active'); tlEl.style.display='none';
+    frEl.innerHTML=buildFRHTML();
+    frEl.classList.add('active');
+    frEl.style.display='block';
+    document.getElementById('contentArea').style.display='none';
+    weekBar.style.display='none'; insBar.style.display='none';
+  } else if(v==='tltrend'){
+    execEl.classList.remove('active'); execEl.style.display='none';
+    frEl.classList.remove('active'); frEl.style.display='none';
+    tlEl.innerHTML=buildTLTrendHTML();
+    tlEl.classList.add('active');
+    tlEl.style.display='block';
+    document.getElementById('contentArea').style.display='none';
+    weekBar.style.display='none'; insBar.style.display='none';
+  } else {
+    execEl.classList.remove('active'); execEl.style.display='none';
+    frEl.classList.remove('active'); frEl.style.display='none';
+    tlEl.classList.remove('active'); tlEl.style.display='none';
+    document.getElementById('contentArea').style.display='';
+    weekBar.style.display=''; insBar.style.display='';
+    render();
+  }
+}
+
+// ══════════════════════════════════════════════════════════════════════
+// MASTER RENDER
+// ══════════════════════════════════════════════════════════════════════
+function render(){
+  renderBars();
+  renderInsights();
+  const area=document.getElementById('contentArea');
+  if(activeView==='client')area.innerHTML=renderClientView();
+  else if(activeView==='city')area.innerHTML=renderCityView();
+  else if(activeView==='weekly')area.innerHTML=renderWeeklyView();
+  else if(activeView==='revenue')area.innerHTML=renderRevenueView();
+}
+
+// ══════════════════════════════════════════════════════════════════════
+// CLIENT VIEW
+// ══════════════════════════════════════════════════════════════════════
+function renderClientView(){
+  return kpiHtml()+sectionHeader()+cardsHtml(null)+trendTableHtml();
+}
+
+function kpiHtml(){
+  let tot={opd:0,dau:0,fod:0},prv={opd:0,dau:0,fod:0},prevLbl='';
+  if(dayMode==='daily'){
+    const c=dLookup[selectedDate]||{},pi=allDates.indexOf(selectedDate)+1,p=dLookup[allDates[pi]]||{};
+    CLIENTS.forEach(k=>{if(c[k]){tot.opd+=c[k].opd;tot.dau+=c[k].dau;tot.fod+=c[k].fod;}if(p[k]){prv.opd+=p[k].opd;prv.dau+=p[k].dau;prv.fod+=p[k].fod;}});
+    prevLbl='vs prev day';
+  } else {
+    CLIENTS.forEach(c=>{if(W.opd[c]){tot.opd+=W.opd[c][selectedWeekIdx];prv.opd+=W.opd[c][selectedWeekIdx+1]||0;}if(W.dau[c]){tot.dau+=W.dau[c][selectedWeekIdx];prv.dau+=W.dau[c][selectedWeekIdx+1]||0;}if(W.fod[c]){tot.fod+=W.fod[c][selectedWeekIdx];prv.fod+=W.fod[c][selectedWeekIdx+1]||0;}});
+    prevLbl=`vs ${W.labels[selectedWeekIdx+1]||'prev'}`;
+  }
+  const d=(m)=>`<span class="kd ${dc(pct(tot[m],prv[m]))}">${ds(pct(tot[m],prv[m]))}</span>`;
+  return `<div class="kpi-row">
+    <div class="kpi c1"><div class="kpi-lbl">Total Orders (OPD)</div><div class="kpi-val">${fmtN(tot.opd)}</div><div class="kpi-sub">${prevLbl}: ${d('opd')}</div></div>
+    <div class="kpi c2"><div class="kpi-lbl">Unique Active Riders (DAU)</div><div class="kpi-val">${fmtN(tot.dau)}</div><div class="kpi-sub">${prevLbl}: ${d('dau')}</div></div>
+    <div class="kpi c3"><div class="kpi-lbl">First Order Deliveries (FOD)</div><div class="kpi-val">${fmtN(tot.fod)}</div><div class="kpi-sub">${prevLbl}: ${d('fod')}</div></div>
+  </div>`;
+}
+
+function sectionHeader(){
+  const lbl=dayMode==='daily'?selectedDate.replace('-2026',''):`${W.labels[selectedWeekIdx]} (${W.dates[selectedWeekIdx]})`;
+  const sub=dayMode==='daily'?'vs previous day':`vs ${W.labels[selectedWeekIdx+1]||'prior week'}`;
+  return `<div class="sh"><span class="sh-title">Client Breakdown — ${lbl}</span><span class="sh-sub">${sub}</span></div>`;
+}
+
+function cardsHtml(cityFilter){
+  let cards='';
+  CLIENTS.forEach(c=>{
+    let d,p,prevLbl;
+    if(dayMode==='daily'){
+      d=(dLookup[selectedDate]||{})[c];
+      const pi=allDates.indexOf(selectedDate)+1;
+      p=(dLookup[allDates[pi]]||{})[c];
+      prevLbl='Prev · '+(allDates[pi]||'').replace('-2026','');
+    } else {
+      if(!W.opd[c])return;
+      d={opd:W.opd[c][selectedWeekIdx],dau:W.dau[c][selectedWeekIdx],fod:W.fod[c][selectedWeekIdx]};
+      const pi=selectedWeekIdx+1;
+      p=pi<6?{opd:W.opd[c][pi],dau:W.dau[c][pi],fod:W.fod[c][pi]}:null;
+      prevLbl=p?`${W.labels[pi]} · ${W.dates[pi]}`:'';
+    }
+    if(!d)return;
+    if(cityFilter){
+      const share=(CITY_CLIENT_SHARE[cityFilter]||{})[c]||0;
+      if(!share)return;
+      const snap=getCitySnapshot();
+      const curCity=snap.cur[cityFilter]||{opd:0,dau:0,fod:0};
+      const prvCity=snap.prev[cityFilter]||{opd:0,dau:0,fod:0};
+      d={opd:Math.round(curCity.opd*share),dau:Math.round(curCity.dau*share),fod:Math.round(curCity.fod*share)};
+      p={opd:Math.round(prvCity.opd*share),dau:Math.round(prvCity.dau*share),fod:Math.round(prvCity.fod*share)};
+      prevLbl=dayMode==='daily'?`vs ${snap.prevLabel||'prev'}`:`vs ${snap.prevLabel||'prev week'}`;
+    }
+    const meta=CLIENT_META[c]||{color:'#888'};
+    const mk=(m)=>`<div class="mc"><div class="mk">${m.toUpperCase()}</div><div class="mv">${fmtN(d[m])}</div><div class="md ${dc(p?pct(d[m],p[m]):null)}">${ds(p?pct(d[m],p[m]):null)}</div></div>`;
+    cards+=`<div class="cc">
+      <div class="cc-top"><div class="cc-name"><div class="cc-dot" style="background:${meta.color}"></div>${c}</div></div>
+      <div class="cc-m">${mk('opd')}${mk('dau')}${mk('fod')}</div>
+      ${p?`<div class="cc-prev"><div class="cc-prev-lbl">${prevLbl}</div><div class="cc-prev-vals"><span><span style="color:var(--text-dim)">OPD </span>${fmtN(p.opd)}</span><span><span style="color:var(--text-dim)">DAU </span>${fmtN(p.dau)}</span><span><span style="color:var(--text-dim)">FOD </span>${fmtN(p.fod)}</span></div></div>`:''}
+    </div>`;
+  });
+  return `<div class="cc-grid">${cards}</div>`;
+}
+
+function trendTableHtml(){
+  const data=W[trendMetric];
+  const si=selectedWeekIdx; // start from selected week, always show 6 weeks
+  const idxs=Array.from({length:6},(_,j)=>si+j).filter(i=>i<W.labels.length);
+  const mtabs=['opd','dau','fod'].map(m=>`<button class="mtab${trendMetric===m?' active':''}" onclick="setTrendMetric('${m}',this)">${m.toUpperCase()}</button>`).join('');
+  let h=`<thead><tr><th>CLIENT</th>${idxs.map(i=>`<th${i===si?' style="color:var(--accent)"':''}>${W.labels[i]}<br><span style="opacity:.5;font-size:9px;font-weight:400">${W.dates[i]}</span></th>`).join('')}<th class="fx"><span class="fx-lbl">FOD</span></th><th class="fx"><span class="fx-lbl">Revenue</span></th><th class="fx"><span class="fx-lbl">Att%</span></th></tr></thead><tbody>`;
+  const tots=idxs.map(i=>CLIENTS.reduce((s,c)=>s+(data[c]?data[c][i]:0),0));
+  h+=`<tr class="tr"><td><div class="cname"><div class="cdot" style="background:#3B8AFF"></div>ALL CLIENTS</div></td>${tots.map((v,j)=>`<td>${fmtN(v)}${j===0&&tots[1]?`<span class="cd ${dc(pct(v,tots[1]))}">${ds(pct(v,tots[1]))}</span>`:''}</td>`).join('')}<td class="fx">${fmtN(CLIENTS.reduce((s,c)=>s+(W.fod[c]?W.fod[c][si]:0),0))}</td><td class="fx">${fmtRev(CLIENTS.reduce((s,c)=>s+(W.rev[c]?W.rev[c][si]:0),0))}</td><td class="fx">—</td></tr>`;
+  CLIENTS.forEach(c=>{
+    if(!data[c])return;
+    const meta=CLIENT_META[c]||{color:'#888'};
+    h+=`<tr><td><div class="cname"><div class="cdot" style="background:${meta.color}"></div>${c}</div></td>${idxs.map((idx,j)=>{const n=data[c][idx]||0,nx=data[c][idxs[j+1]]||0;return`<td>${fmtN(n)}${j===0&&nx?`<span class="cd ${dc(pct(n,nx))}">${ds(pct(n,nx))}</span>`:''}</td>`;}).join('')}<td class="fx">${fodCell(W.fod[c][si],W.fod[c][si+1])}</td><td class="fx">${fmtRev(W.rev[c][si]||0)}</td><td class="fx"><span class="att ${attCls(W.att[c][si])}">${W.att[c][si]}</span></td></tr>`;
+  });
+  h+='</tbody>';
+  return `<div class="tw"><div class="tw-top"><span class="tw-title">All Clients — Trend from ${W.labels[si]}</span><div class="mtabs">${mtabs}</div></div><div class="ts"><table>${h}</table></div></div>`;
+}
+function setTrendMetric(m){trendMetric=m;render();}
+
+// ══════════════════════════════════════════════════════════════════════
+// CITY VIEW
+// ══════════════════════════════════════════════════════════════════════
+
+// City's share of each client's Pan India orders (from 16-Jun DAU ratios: city_client_dau / pan_india_client_dau)
+// Used for city detail client breakdown table only
+const CITY_CLIENT_SHARE = {
+  'Bengaluru':{'Zepto':0.140,'Blinkit':0.280,'FK Minutes':0.035,'BB Now':0.184,'Rapido':0.245,'Instamart':0.868,'Frist Club':1.000},
+  'Chennai':  {'Zepto':0.100,'Rapido':0.012},
+  'Hyderabad':{'Zepto':0.132,'Blinkit':0.043,'Rapido':0.033},
+  'Delhi NCR':{'Zepto':0.178,'Blinkit':0.246,'FK Minutes':0.058,'BB Now':0.389,'Rapido':0.453,'Country Delight':0.590},
+  'Kolkata':  {'Zepto':0.055,'Blinkit':0.008,'FK Minutes':0.280,'BB Now':0.115},
+  'Mumbai':   {'Zepto':0.120,'Blinkit':0.024,'FK Minutes':0.080,'Rapido':0.014},
+  'Pune':     {'Zepto':0.048,'Blinkit':0.030,'FK Minutes':0.013,'BB Now':0.030},
+};
+
+// 4 real city snapshots from Master Tracker "daily || Master_City_wise" (D-1/D-8/D-15/D-28)
+const CITY_SNAPS = [
+  {date:'12-Aug-2026',offset:0,
+   opd:{'Bengaluru':18150,'Chennai':3038,'Delhi NCR':9114,'Hyderabad':5293,'Kolkata':6099,'Mumbai':11653,'Pune':2486},
+   dau:{'Bengaluru':938,'Chennai':116,'Delhi NCR':710,'Hyderabad':308,'Kolkata':349,'Mumbai':836,'Pune':124},
+   fod:{'Bengaluru':26,'Chennai':0,'Delhi NCR':14,'Hyderabad':9,'Kolkata':7,'Mumbai':33,'Pune':2}},
+  {date:'5-Aug-2026',offset:-8,
+   opd:{'Bengaluru':18788,'Chennai':3508,'Delhi NCR':8778,'Hyderabad':6033,'Kolkata':5472,'Mumbai':10969,'Pune':1897},
+   dau:{'Bengaluru':1031,'Chennai':132,'Delhi NCR':719,'Hyderabad':319,'Kolkata':307,'Mumbai':777,'Pune':118},
+   fod:{'Bengaluru':32,'Chennai':1,'Delhi NCR':10,'Hyderabad':7,'Kolkata':3,'Mumbai':24,'Pune':3}},
+  {date:'29-Jul-2026',offset:-15,
+   opd:{'Bengaluru':17603,'Chennai':3550,'Delhi NCR':9788,'Hyderabad':6170,'Kolkata':5089,'Mumbai':10372,'Pune':2140},
+   dau:{'Bengaluru':1043,'Chennai':148,'Delhi NCR':785,'Hyderabad':326,'Kolkata':322,'Mumbai':788,'Pune':128},
+   fod:{'Bengaluru':26,'Chennai':2,'Delhi NCR':9,'Hyderabad':7,'Kolkata':4,'Mumbai':24,'Pune':3}},
+  {date:'15-Jul-2026',offset:-28,
+   opd:{'Bengaluru':16188,'Chennai':3994,'Delhi NCR':8743,'Hyderabad':6279,'Kolkata':5182,'Mumbai':9123,'Pune':2208},
+   dau:{'Bengaluru':953,'Chennai':144,'Delhi NCR':720,'Hyderabad':327,'Kolkata':327,'Mumbai':743,'Pune':120},
+   fod:{'Bengaluru':14,'Chennai':3,'Delhi NCR':36,'Hyderabad':6,'Kolkata':9,'Mumbai':35,'Pune':1}},
+];
+
+// Build daily city lookup: exact snapshots + linear interpolation for all other dates
+const CITY_DAILY = (function(){
+  const out={};
+  const CITIES=Object.keys(CITY_SNAPS[0].opd);
+  CITY_SNAPS.forEach(s=>{out[s.date]={opd:{...s.opd},dau:{...s.dau},fod:{...s.fod}};});
+
+  function dayOff(dateStr){
+    const m={Jan:0,Feb:1,Mar:2,Apr:3,May:4,Jun:5,Jul:6,Aug:7,Sep:8,Oct:9,Nov:10,Dec:11};
+    const p=dateStr.split('-');
+    return Math.round((new Date(2026,m[p[1]],+p[0])-new Date(2026,6,15))/86400000);
+  }
+  function interp(s1,s2,t){
+    const r={opd:{},dau:{},fod:{}};
+    CITIES.forEach(c=>{
+      r.opd[c]=Math.round((s1.opd[c]||0)+(((s2.opd[c]||0)-(s1.opd[c]||0))*t));
+      r.dau[c]=Math.round((s1.dau[c]||0)+(((s2.dau[c]||0)-(s1.dau[c]||0))*t));
+      r.fod[c]=Math.round((s1.fod[c]||0)+(((s2.fod[c]||0)-(s1.fod[c]||0))*t));
+    });
+    return r;
+  }
+  [...new Set(DAILY_RAW.map(r=>r.date))].forEach(d=>{
+    if(out[d]) return;
+    const off=dayOff(d);
+    let s1=CITY_SNAPS[0],s2=CITY_SNAPS[1];
+    for(let i=0;i<CITY_SNAPS.length-1;i++){
+      if(off<=CITY_SNAPS[i].offset && off>=CITY_SNAPS[i+1].offset){s1=CITY_SNAPS[i];s2=CITY_SNAPS[i+1];break;}
+    }
+    const t=s1.offset===s2.offset?0:(off-s1.offset)/(s2.offset-s1.offset);
+    out[d]=interp(s1,s2,t);
+  });
+  return out;
+})();
+
+// Compute city data for current view (daily or weekly)
+function getCitySnapshot(){
+  if(dayMode==='daily'){
+    const raw  = CITY_DAILY[selectedDate]||{opd:{},dau:{},fod:{}};
+    const pi   = allDates.indexOf(selectedDate)+1;
+    const rawP = CITY_DAILY[allDates[pi]]||{opd:{},dau:{},fod:{}};
+    const prevLabel = (allDates[pi]||'').replace('-2026','');
+    // Transpose from {opd:{city:v},dau:{city:v},fod:{city:v}} → {city:{opd,dau,fod}}
+    const cur={}, prev={};
+    const cities = Object.keys(raw.opd||{});
+    cities.forEach(c=>{
+      cur[c]  = {opd:raw.opd[c]||0,  dau:raw.dau[c]||0,  fod:raw.fod[c]||0};
+      prev[c] = {opd:rawP.opd[c]||0, dau:rawP.dau[c]||0, fod:rawP.fod[c]||0};
+    });
+    return {cur, prev, prevLabel};
+  } else {
+    const cur={}, prev={};
+    CITY_DATA.forEach(cd=>{
+      cur[cd.city]={opd:0,dau:0,fod:0};
+      prev[cd.city]={opd:0,dau:0,fod:0};
+      const sh=CITY_CLIENT_SHARE[cd.city]||{};
+      CLIENTS.forEach(c=>{
+        const s=sh[c]||0; if(!s) return;
+        cur[cd.city].opd +=Math.round((W.opd[c][selectedWeekIdx]||0)*s);
+        cur[cd.city].dau +=Math.round((W.dau[c][selectedWeekIdx]||0)*s);
+        cur[cd.city].fod +=Math.round((W.fod[c][selectedWeekIdx]||0)*s);
+        const pi=selectedWeekIdx+1;
+        prev[cd.city].opd+=Math.round((W.opd[c][pi]||0)*s);
+        prev[cd.city].dau+=Math.round((W.dau[c][pi]||0)*s);
+        prev[cd.city].fod+=Math.round((W.fod[c][pi]||0)*s);
+      });
+    });
+    const prevLabel=W.labels[selectedWeekIdx+1]||'';
+    return {cur, prev, prevLabel};
+  }
+}
+
+// Aggregate zone totals from snapshot
+function getZoneSnapshot(snap){
+  const out={};
+  ['South','North','West','East'].forEach(z=>{
+    const cities=CITY_DATA.filter(c=>c.zone===z);
+    out[z]={
+      opd: cities.reduce((s,c)=>s+(snap.cur[c.city]?snap.cur[c.city].opd:0),0),
+      dau: cities.reduce((s,c)=>s+(snap.cur[c.city]?snap.cur[c.city].dau:0),0),
+      fod: cities.reduce((s,c)=>s+(snap.cur[c.city]?snap.cur[c.city].fod:0),0),
+      popd:cities.reduce((s,c)=>s+(snap.prev[c.city]?snap.prev[c.city].opd:0),0),
+      cities:cities.map(c=>c.city)
+    };
+  });
+  return out;
+}
+
+const ZONE_COLORS = {South:'#00C896', North:'#3B8AFF', West:'#FF8C00', East:'#9B59B6'};
+const ZONE_ICONS  = {
+  South:'<path d="M10 2C6.686 2 4 4.686 4 8c0 5.25 6 10 6 10s6-4.75 6-10c0-3.314-2.686-6-6-6zm0 8a2 2 0 110-4 2 2 0 010 4z" fill="currentColor"/>',
+  North:'<path d="M10 2l2 6h6l-5 4 2 6-5-4-5 4 2-6-5-4h6z" fill="currentColor"/>',
+  West: '<circle cx="10" cy="10" r="7" stroke="currentColor" stroke-width="1.5" fill="none"/><path d="M3 10h14M10 3a9 7 0 010 14A9 7 0 0110 3" stroke="currentColor" stroke-width="1.5" fill="none"/>',
+  East: '<rect x="3" y="3" width="14" height="14" rx="2" stroke="currentColor" stroke-width="1.5" fill="none"/><line x1="3" y1="8" x2="17" y2="8" stroke="currentColor" stroke-width="1.5"/><line x1="3" y1="13" x2="17" y2="13" stroke="currentColor" stroke-width="1.5"/>',
+};
+
+function renderCityView(){
+  const cityName  = selectedCity;
+  const zoneFilter= selectedZone;
+  const snap      = getCitySnapshot();
+  const zoneTots  = getZoneSnapshot(snap);
+  const periodLbl = dayMode==='daily'
+    ? selectedDate.replace('-2026','')
+    : `${W.labels[selectedWeekIdx]} (${W.dates[selectedWeekIdx]})`;
+  const vsLbl = dayMode==='daily'
+    ? `vs ${snap.prevLabel||'prev'}`
+    : `vs ${snap.prevLabel||'prev week'}`;
+
+  // ── ZONE SUMMARY (4 cards, always reactive) ────────────────────────
+  const zoneCards = ['South','North','West','East'].map(z=>{
+    const zd = zoneTots[z];
+    const wow = pct(zd.opd, zd.popd);
+    const isActive = zoneFilter===z;
+    return `<div class="kpi" onclick="setZoneClick('${z}')" style="cursor:pointer;border-color:${isActive?ZONE_COLORS[z]:'var(--border)'};position:relative;overflow:hidden">
+      <div style="position:absolute;top:0;left:0;right:0;height:2px;background:${ZONE_COLORS[z]}"></div>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+        <div class="kpi-lbl">${z} Zone · ${periodLbl}</div>
+        <svg width="14" height="14" viewBox="0 0 20 20" style="color:${ZONE_COLORS[z]};opacity:.7">${ZONE_ICONS[z]}</svg>
+      </div>
+      <div class="kpi-val" style="font-size:22px">${fmtN(zd.opd)}</div>
+      <div class="kpi-sub" style="margin-top:4px;display:flex;gap:12px">
+        <span>DAU <strong>${fmtN(zd.dau)}</strong></span>
+        <span>FOD <strong>${fmtN(zd.fod)}</strong></span>
+        <span class="kd ${dc(wow)}">${ds(wow)} ${vsLbl}</span>
+      </div>
+      <div style="font-size:9.5px;color:var(--text-dim);margin-top:5px">${zd.cities.join(' · ')}</div>
+    </div>`;
+  }).join('');
+
+  // ── No city selected → zone cards + city grid ──────────────────────
+  if(!cityName){
+    const zoneCities = zoneFilter ? CITY_DATA.filter(c=>c.zone===zoneFilter) : CITY_DATA;
+    const cityGrid = zoneCities.map(cd=>{
+      const cur  = snap.cur[cd.city]  || {opd:0,dau:0,fod:0};
+      const prev = snap.prev[cd.city] || {opd:0,dau:0,fod:0};
+      const wow  = pct(cur.opd, prev.opd);
+      return `<div class="cc" onclick="selectCityCard('${cd.city}')" style="cursor:pointer">
+        <div class="cc-top"><div class="cc-name"><div class="cc-dot" style="background:${ZONE_COLORS[cd.zone]}"></div>${cd.city}</div><span style="font-size:9.5px;color:var(--text-dim)">${cd.zone}</span></div>
+        <div class="cc-m">
+          <div class="mc"><div class="mk">OPD</div><div class="mv">${fmtN(cur.opd)}</div><div class="md ${dc(wow)}">${ds(wow)}</div></div>
+          <div class="mc"><div class="mk">DAU</div><div class="mv">${fmtN(cur.dau)}</div><div class="md flat">—</div></div>
+          <div class="mc"><div class="mk">FOD</div><div class="mv">${fmtN(cur.fod)}</div><div class="md flat">—</div></div>
+        </div>
+        <div class="cc-prev"><div class="cc-prev-lbl">${vsLbl}</div><div class="cc-prev-vals">
+          <span><span style="color:var(--text-dim)">OPD </span>${fmtN(prev.opd)}</span>
+          <span><span style="color:var(--text-dim)">DAU </span>${fmtN(prev.dau)}</span>
+          <span><span style="color:var(--text-dim)">FOD </span>${fmtN(prev.fod)}</span>
+        </div></div>
+      </div>`;
+    }).join('');
+    return `<div class="kpi-row">${zoneCards}</div>
+      <div class="sh"><span class="sh-title">${zoneFilter?zoneFilter+' Zone':'All Zones'} — City Breakdown <span style="font-size:10px;color:var(--text-muted)">(click a city for client detail)</span></span><span class="sh-sub">${periodLbl} · ${vsLbl}</span></div>
+      <div class="cc-grid">${cityGrid}</div>`;
+  }
+
+  // ── City detail view ───────────────────────────────────────────────
+  const cd    = CITY_DATA.find(c=>c.city===cityName)||CITY_DATA[0];
+  const share = CITY_CLIENT_SHARE[cityName]||{};
+  const curC  = snap.cur[cityName]  || {opd:0,dau:0,fod:0};
+  const prevC = snap.prev[cityName] || {opd:0,dau:0,fod:0};
+
+  // City hero stats
+  const cityHero = `
+  <div class="city-hero" style="margin-top:4px">
+    <div class="city-icon" style="background:rgba(0,0,0,.1)"><svg width="20" height="20" viewBox="0 0 20 20" style="color:${ZONE_COLORS[cd.zone]}">${ZONE_ICONS[cd.zone]}</svg></div>
+    <div><div class="city-name">${cd.city}</div><div class="city-zone">${cd.zone} Zone</div></div>
+    <div class="city-stats">
+      <div class="city-stat"><div class="city-stat-val">${fmtN(curC.opd)}</div><div class="city-stat-lbl">${periodLbl} OPD</div></div>
+      <div class="city-stat"><div class="city-stat-val">${fmtN(curC.dau)}</div><div class="city-stat-lbl">${periodLbl} DAU</div></div>
+      <div class="city-stat"><div class="city-stat-val">${fmtN(curC.fod)}</div><div class="city-stat-lbl">${periodLbl} FOD</div></div>
+      <div class="city-stat"><div class="city-stat-val" style="color:var(--${dc(pct(curC.opd,prevC.opd))})">${ds(pct(curC.opd,prevC.opd))}</div><div class="city-stat-lbl">${vsLbl}</div></div>
+    </div>
+  </div>`;
+
+  // Client weekly trend table (always shows 6-week W28–W23 view)
+  let cityTableH=`<thead><tr><th>CLIENT</th>${W.labels.map((w,i)=>`<th>${w}<br><span style="opacity:.5;font-size:9px;font-weight:400">${W.dates[i]}</span></th>`).join('')}<th class="fx">W28 FOD</th><th class="fx">W28 Revenue</th><th class="fx">W28 Att%</th></tr></thead><tbody>`;
+  CLIENTS.forEach(c=>{
+    if(!share[c])return;
+    const meta=CLIENT_META[c];
+    const sv=W.opd[c].map(v=>Math.round(v*share[c]));
+    const wow=pct(sv[0],sv[1]);
+    const fodCur=Math.round((W.fod[c][0]||0)*share[c]), fodPrev=Math.round((W.fod[c][1]||0)*share[c]);
+    cityTableH+=`<tr><td><div class="cname"><div class="cdot" style="background:${meta.color}"></div>${c}</div></td>${sv.map((v,i)=>`<td>${fmtN(v)}${i===0?`<span class="cd ${dc(wow)}">${ds(wow)}</span>`:''}</td>`).join('')}<td class="fx">${fodCell(fodCur,fodPrev)}</td><td class="fx">${fmtRev(Math.round((W.rev[c][0]||0)*share[c]))}</td><td class="fx"><span class="att ${attCls(W.att[c][0])}">${W.att[c][0]}</span></td></tr>`;
+  });
+  cityTableH+='</tbody>';
+
+  // Daily client cards for selected date
+  const clientCards = cardsHtml(cityName);
+
+  return `
+  <div class="kpi-row">${zoneCards}</div>
+  ${cityHero}
+  <div class="sh" style="margin-top:10px"><span class="sh-title">Client Breakdown — ${cd.city} · ${periodLbl}</span><span class="sh-sub">${vsLbl}</span></div>
+  ${clientCards}
+  <div class="tw"><div class="tw-top"><span class="tw-title">Client Trend — ${cd.city} · W28–W23</span></div><div class="ts"><table>${cityTableH}</table></div></div>`;
+}
+
+// ══════════════════════════════════════════════════════════════════════
+// WEEKLY SUMMARY VIEW
+// ══════════════════════════════════════════════════════════════════════
+function wsTable(title,color,metric,formatter,footerFn){
+  const cols=W.labels;
+  const colDates=W.dates;
+  let h=`<thead><tr><th>CLIENT</th>${cols.map((w,i)=>`<th>${w}<br><span style="opacity:.5;font-size:9px;font-weight:400">${colDates[i]}</span></th>`).join('')}<th>WoW</th></tr></thead><tbody>`;
+  // Total row
+  const tots=cols.map((_,i)=>CLIENTS.reduce((s,c)=>{const v=metric[c]?metric[c][i]:0;return typeof v==='string'?s:s+v;},0));
+  h+=`<tr class="tr"><td><div class="cname"><div class="cdot" style="background:#3B8AFF"></div>TOTAL</div></td>${tots.map((v,i)=>`<td>${formatter?formatter(v,i):fmtN(v)}${i===0&&tots[1]?`<span class="cd ${dc(pct(v,tots[1]))}">${ds(pct(v,tots[1]))}</span>`:''}</td>`).join('')}<td><span class="cd ${dc(pct(tots[0],tots[1]))}">${ds(pct(tots[0],tots[1]))}</span></td></tr>`;
+  CLIENTS.forEach(c=>{
+    const meta=CLIENT_META[c]||{color:'#888'};
+    const vals=metric[c]||Array(6).fill(0);
+    const wow=typeof vals[0]==='string'?null:pct(vals[0],vals[1]);
+    h+=`<tr><td><div class="cname"><div class="cdot" style="background:${meta.color}"></div>${c}</div></td>
+      ${vals.map((v,i)=>`<td>${formatter?formatter(v,i):(typeof v==='string'?`<span class="att ${attCls(v)}">${v}</span>`:fmtN(v))}${i===0&&typeof v!=='string'&&vals[1]?`<span class="cd ${dc(pct(v,vals[1]))}">${ds(pct(v,vals[1]))}</span>`:''}</td>`).join('')}
+      <td>${wow!==null?`<span class="cd ${dc(wow)}">${ds(wow)}</span>`:'—'}</td></tr>`;
+  });
+  h+='</tbody>';
+  return `<div class="ws-table-block"><div class="ws-hdr"><div class="ws-icon" style="background:${color}"></div><span class="ws-title">${title}</span><span class="ws-sub">Last 6 weeks · Client-wise</span></div><div class="ts"><table>${h}</table></div></div>`;
+}
+
+function renderWeeklyView(){
+  return `<div class="ws-grid">
+    ${wsTable('Table 1 — WAU (Weekly Active Riders)','#3B8AFF',W.wau,null)}
+    ${wsTable('Table 2 — FOD (First Order Deliveries)','#00C896',W.fod,null)}
+    ${wsTable('Table 3 — Revenue (₹)','#FF8C00',W.rev,(v)=>fmtRev(v))}
+    ${wsTable('Table 4 — Attrition %','#FF4D6A',W.att,(v)=>`<span class="att ${attCls(v)}">${v}</span>`)}
+  </div>`;
+}
+
+// ══════════════════════════════════════════════════════════════════════
+// REVENUE VIEW
+// ══════════════════════════════════════════════════════════════════════
+function renderRevenueView(){
+  // Revenue KPI cards — total per week
+  const weekTotals=W.labels.map((_,i)=>CLIENTS.reduce((s,c)=>s+(W.rev[c][i]||0),0));
+  const kpis=weekTotals.slice(0,3).map((v,i)=>`
+    <div class="kpi c${i+1}">
+      <div class="kpi-lbl">${W.labels[i]} Revenue</div>
+      <div class="kpi-val" style="font-size:22px">${fmtRev(v)}</div>
+      <div class="kpi-sub">${W.dates[i]}</div>
+    </div>`).join('');
+
+  // Revenue table — clients × 6 weeks with trend bars
+  const maxRev=Math.max(...CLIENTS.flatMap(c=>W.rev[c]));
+  let tableH=`<thead><tr><th>CLIENT</th>${W.labels.map((w,i)=>`<th>${w}<br><span style="opacity:.5;font-size:9px;font-weight:400">${W.dates[i]}</span></th>`).join('')}<th>W1 vs W2</th></tr></thead><tbody>`;
+
+  // Total row
+  tableH+=`<tr class="tr"><td><div class="cname"><div class="cdot" style="background:#3B8AFF"></div>TOTAL</div></td>
+    ${weekTotals.map((v,i)=>`<td class="rev-cell"><div class="rev-amt">${fmtRev(v)}</div><div class="rev-bar-wrap"><div class="rev-bar" style="width:${Math.round(v/Math.max(...weekTotals)*100)}%;background:#3B8AFF"></div></div></td>`).join('')}
+    <td><span class="cd ${dc(pct(weekTotals[0],weekTotals[1]))}">${ds(pct(weekTotals[0],weekTotals[1]))}</span></td></tr>`;
+
+  CLIENTS.forEach(c=>{
+    const meta=CLIENT_META[c];
+    const vals=W.rev[c];
+    const nonZero=vals.filter(v=>v>0);
+    const maxC=nonZero.length?Math.max(...nonZero):1;
+    const wow=vals[1]?pct(vals[0],vals[1]):null;
+    tableH+=`<tr><td><div class="cname"><div class="cdot" style="background:${meta.color}"></div>${c}</div></td>
+      ${vals.map(v=>`<td class="rev-cell"><div class="rev-amt${!v?' pending':''}">${fmtRev(v)}</div>${v?`<div class="rev-bar-wrap"><div class="rev-bar" style="width:${Math.round(v/maxC*100)}%;background:${meta.color}80"></div></div>`:''}</td>`).join('')}
+      <td>${wow!==null?`<span class="cd ${dc(wow)}">${ds(wow)}</span>`:'<span style="color:var(--text-dim);font-size:10px">Pending</span>'}</td></tr>`;
+  });
+  tableH+='</tbody>';
+
+  return `
+  <div class="rev-view">
+    <div class="kpi-row">${kpis}</div>
+    <div class="tw">
+      <div class="tw-top">
+        <span class="tw-title">Revenue by Client — Last 6 Weeks</span>
+        <span style="font-size:10.5px;color:var(--text-muted)">Source: Weekly Payout_Data · "Pending" = payment not yet posted for W-28</span>
+      </div>
+      <div class="ts"><table>${tableH}</table></div>
+    </div>
+  </div>`;
+}
+
+// ══════════════════════════════════════════════════════════════════════
+// THEME + INIT
+// ══════════════════════════════════════════════════════════════════════
+function toggleTheme(){const c=document.documentElement.getAttribute('data-theme');document.documentElement.setAttribute('data-theme',c==='dark'?'light':'dark');}
+const ts=new Date().toLocaleString('en-IN',{dateStyle:'medium',timeStyle:'short'});
+document.getElementById('ts').textContent=ts;
+document.getElementById('ts2').textContent=ts;
+populateCities();
+render();
+</script>
+</body>
+</html>
