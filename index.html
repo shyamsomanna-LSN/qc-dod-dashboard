@@ -303,77 +303,79 @@ const DAILY_RAW = [
 {"date":"1-Jul-2026","client":"Country Delight","opd":302,"dau":28,"fod":2},{"date":"2-Jul-2026","client":"Country Delight","opd":278,"dau":26,"fod":1},{"date":"3-Jul-2026","client":"Country Delight","opd":251,"dau":24,"fod":1},{"date":"4-Jul-2026","client":"Country Delight","opd":208,"dau":21,"fod":1},{"date":"5-Jul-2026","client":"Country Delight","opd":221,"dau":22,"fod":1},{"date":"6-Jul-2026","client":"Country Delight","opd":256,"dau":25,"fod":2},{"date":"7-Jul-2026","client":"Country Delight","opd":263,"dau":25,"fod":2},{"date":"8-Jul-2026","client":"Country Delight","opd":271,"dau":26,"fod":2},{"date":"9-Jul-2026","client":"Country Delight","opd":331,"dau":30,"fod":2},{"date":"10-Jul-2026","client":"Country Delight","opd":319,"dau":29,"fod":2},{"date":"11-Jul-2026","client":"Country Delight","opd":281,"dau":27,"fod":2},{"date":"12-Jul-2026","client":"Country Delight","opd":309,"dau":29,"fod":2},{"date":"13-Jul-2026","client":"Country Delight","opd":233,"dau":23,"fod":1},{"date":"14-Jul-2026","client":"Country Delight","opd":244,"dau":24,"fod":1},{"date":"15-Jul-2026","client":"Country Delight","opd":205,"dau":21,"fod":1},{"date":"16-Jul-2026","client":"Country Delight","opd":206,"dau":22,"fod":1},{"date":"17-Jul-2026","client":"Country Delight","opd":275,"dau":21,"fod":1},{"date":"18-Jul-2026","client":"Country Delight","opd":281,"dau":22,"fod":0},{"date":"19-Jul-2026","client":"Country Delight","opd":280,"dau":19,"fod":0},{"date":"20-Jul-2026","client":"Country Delight","opd":313,"dau":23,"fod":0},{"date":"21-Jul-2026","client":"Country Delight","opd":312,"dau":30,"fod":5},{"date":"22-Jul-2026","client":"Country Delight","opd":286,"dau":24,"fod":0},{"date":"23-Jul-2026","client":"Country Delight","opd":268,"dau":25,"fod":1},{"date":"24-Jul-2026","client":"Country Delight","opd":249,"dau":25,"fod":1},{"date":"25-Jul-2026","client":"Country Delight","opd":351,"dau":29,"fod":0},{"date":"26-Jul-2026","client":"Country Delight","opd":324,"dau":25,"fod":0},{"date":"27-Jul-2026","client":"Country Delight","opd":277,"dau":23,"fod":0},{"date":"28-Jul-2026","client":"Country Delight","opd":291,"dau":23,"fod":1},{"date":"29-Jul-2026","client":"Country Delight","opd":390,"dau":25,"fod":0},{"date":"30-Jul-2026","client":"Country Delight","opd":327,"dau":24,"fod":0},{"date":"31-Jul-2026","client":"Country Delight","opd":352,"dau":26,"fod":3},{"date":"1-Aug-2026","client":"Country Delight","opd":378,"dau":28,"fod":1},{"date":"2-Aug-2026","client":"Country Delight","opd":431,"dau":29,"fod":2},{"date":"3-Aug-2026","client":"Country Delight","opd":383,"dau":28,"fod":0},{"date":"4-Aug-2026","client":"Country Delight","opd":332,"dau":31,"fod":4},{"date":"5-Aug-2026","client":"Country Delight","opd":362,"dau":31,"fod":1},{"date":"6-Aug-2026","client":"Country Delight","opd":369,"dau":31,"fod":2},{"date":"7-Aug-2026","client":"Country Delight","opd":292,"dau":30,"fod":0},{"date":"8-Aug-2026","client":"Country Delight","opd":391,"dau":28,"fod":0},{"date":"9-Aug-2026","client":"Country Delight","opd":426,"dau":26,"fod":0},{"date":"10-Aug-2026","client":"Country Delight","opd":393,"dau":28,"fod":0},{"date":"11-Aug-2026","client":"Country Delight","opd":330,"dau":27,"fod":0},{"date":"12-Aug-2026","client":"Country Delight","opd":349,"dau":30,"fod":0},{"date":"13-Aug-2026","client":"Country Delight","opd":363,"dau":32,"fod":0},{"date":"14-Aug-2026","client":"Country Delight","opd":327,"dau":30,"fod":1},{"date":"15-Aug-2026","client":"Country Delight","opd":176,"dau":12,"fod":0},{"date":"16-Aug-2026","client":"Country Delight","opd":362,"dau":23,"fod":0},{"date":"17-Aug-2026","client":"Country Delight","opd":362,"dau":27,"fod":0},{"date":"18-Aug-2026","client":"Country Delight","opd":330,"dau":29,"fod":1},{"date":"19-Aug-2026","client":"Country Delight","opd":373,"dau":30,"fod":0},{"date":"20-Aug-2026","client":"Country Delight","opd":351,"dau":29,"fod":0}
 ];
 
-// Weekly data — W29…W18 (12 weeks; any selected week shows 6 consecutive)
-// Sources: OPD/DAU/FOD/WAU from QC Pre-Read & Master Tracker; REV from Weekly Payout_Data
-// W29 OPD/FOD updated 20-Jul-2026 from Daily_Overall_Data (15–19 Jul, 5 days; Zepto 2 days only)
+// Weekly data — W34…W23 (12 weeks; any selected week shows 6 consecutive)
+// Sources: WAU/OPW/DAU/FOD/Attrition% from Master Tracker "weekly_summary" tab; REV from "Weekly Payout_Data" tab
+// W34 is the current/live week (partial — WAU/OPD/DAU/FOD reflect data through ~24-Aug; Revenue not yet posted for the live week, shown as 0)
+// Country Delight has no weekly_summary rows (not tracked in that tab) — its W31-W34 opd/dau/fod are derived by summing/averaging DAILY_RAW; wau/att carried forward from W30 (last known) since no weekly source exists
+// Ownly has been ~inactive since W29 (0 orders); W31-W34 opd/dau/fod carried forward as 0, wau carried forward from W30
 const W = {
-  labels:['W30','W29','W28','W27','W26','W25','W24','W23','W22','W21','W20','W19'],
-  dates: ['22–28 Jul','15–21 Jul','8–14 Jul','1–7 Jul','24–30 Jun','17–23 Jun','10–16 Jun','3–9 Jun','27 May–2 Jun','20–26 May','13–19 May','6–12 May'],
+  labels:['W34','W33','W32','W31','W30','W29','W28','W27','W26','W25','W24','W23'],
+  dates: ['19–25 Aug','12–18 Aug','5–11 Aug','29 Jul–4 Aug','22–28 Jul','15–21 Jul','8–14 Jul','1–7 Jul','24–30 Jun','17–23 Jun','10–16 Jun','3–9 Jun'],
   opd:{
-    'Blinkit':           [97070,70390,93700,93329,88015,89374,89131,86204,82287,86192,87977,89816],
-    'Zepto':             [228823,93909,219504,224747,213393,241321,257885,248632,238461,297377,346652,202890],
-    'FK Minutes':        [80823,60352,85667,80793,87099,75350,74340,71820,68747,63699,63864,63757],
-    'BB Now':            [60106,47845,68212,78863,65302,62546,63275,60841,64047,64006,62640,61860],
-    'Rapido':            [70875,59411,38870,80621,79870,83131,79610,77340,9902,9121,8540,7840],
-    'Instamart':         [10063,6488,7835,8289,10776,9233,10282,9876,0,0,0,0],
-    'Frist Club':        [10568,7857,10552,10288,11627,9762,10375,9943,0,0,0,0],
-    'Country Delight':   [2103,1247,1969,2093,1718,1511,1396,1352,0,0,0,0],
-    'Ownly':             [767,0,577,520,1198,1236,1074,1021,0,0,0,0]
+    'Blinkit':           [102502,108919,106845,101904,97070,70390,93700,93329,88015,89374,89131,86204],
+    'Zepto':             [218875,237475,242754,239414,228823,93909,219504,224747,213393,241321,257885,248632],
+    'FK Minutes':        [98428,97455,95764,87599,80823,60352,85667,80793,87099,75350,74340,71820],
+    'BB Now':            [67093,72621,75231,70684,60106,47845,68212,78863,65302,62546,63275,60841],
+    'Rapido':            [75634,73591,77318,84217,70875,59411,38870,80621,79870,83131,79610,77340],
+    'Instamart':         [13390,10828,12197,12052,10063,6488,7835,8289,10776,9233,10282,9876],
+    'Frist Club':        [11812,11896,11381,10113,10568,7857,10552,10288,11627,9762,10375,9943],
+    'Country Delight':   [724,2269,2563,2593,2103,1247,1969,2093,1718,1511,1396,1352],
+    'Ownly':             [0,0,0,0,767,0,577,520,1198,1236,1074,1021]
   },
   dau:{
-    'Blinkit':           [744,270,672,680,677,676,657,641,613,608,602,604],
-    'Zepto':             [1481,578,1346,1401,1308,1390,1470,1438,1346,1697,1780,1049],
-    'FK Minutes':        [703,308,690,642,683,612,595,578,579,553,526,507],
-    'BB Now':            [485,213,492,518,499,503,500,487,478,458,421,400],
-    'Rapido':            [1497,745,711,1655,1506,1550,1514,1480,123,115,97,94],
-    'Instamart':         [62,16,48,47,48,52,52,51,0,0,0,0],
-    'Frist Club':        [183,77,209,215,215,181,186,182,0,0,0,0],
-    'Country Delight':   [26,8,22,24,20,18,17,17,0,0,0,0],
-    'Ownly':             [5,0,4,4,8,8,7,7,0,0,0,0]
+    'Blinkit':           [759,756,768,758,744,270,672,680,677,676,657,641],
+    'Zepto':             [1430,1447,1504,1527,1481,578,1346,1401,1308,1390,1470,1438],
+    'FK Minutes':        [824,781,756,732,703,308,690,642,683,612,595,578],
+    'BB Now':            [497,501,503,513,485,213,492,518,499,503,500,487],
+    'Rapido':            [1660,1590,1708,1823,1497,745,711,1655,1506,1550,1514,1480],
+    'Instamart':         [75,64,70,69,62,16,48,47,48,52,52,51],
+    'Frist Club':        [221,188,187,177,183,77,209,215,215,181,186,182],
+    'Country Delight':   [30,26,29,27,26,8,22,24,20,18,17,17],
+    'Ownly':             [0,0,0,0,5,0,4,4,8,8,7,7]
   },
   fod:{
-    'Blinkit':           [125,78,103,73,85,114,102,97,98,72,74,78],
-    'Zepto':             [210,82,138,184,116,109,61,58,86,63,34,9],
-    'FK Minutes':        [84,79,129,142,68,106,75,71,91,105,84,86],
-    'BB Now':            [65,40,57,84,56,76,86,82,80,67,71,50],
-    'Rapido':            [265,319,47,1358,169,229,226,215,35,47,17,28],
-    'Instamart':         [24,21,22,13,15,20,33,31,0,0,0,0],
-    'Frist Club':        [25,13,9,28,28,40,32,30,0,0,0,0],
-    'Country Delight':   [7,4,2,3,3,4,4,4,0,0,0,0],
-    'Ownly':             [0,0,0,0,0,0,1,0,0,0,0,0]
+    'Blinkit':           [110,83,118,114,125,78,103,73,85,114,102,97],
+    'Zepto':             [157,146,182,181,210,82,138,184,116,109,61,58],
+    'FK Minutes':        [125,110,93,90,84,79,129,142,68,106,75,71],
+    'BB Now':            [46,71,57,95,65,40,57,84,56,76,86,82],
+    'Rapido':            [220,207,310,413,265,319,47,1358,169,229,226,215],
+    'Instamart':         [30,22,23,20,24,21,22,13,15,20,33,31],
+    'Frist Club':        [53,67,43,30,25,13,9,28,28,40,32,30],
+    'Country Delight':   [0,2,3,10,7,4,2,3,3,4,4,4],
+    'Ownly':             [0,0,0,0,0,0,0,0,0,0,1,0]
   },
   wau:{
-    'Blinkit':           [1150,1107,1050,1035,1038,1034,1012,999,955,921,926,909],
-    'Zepto':             [2240,2116,2077,2106,1964,2110,2136,2241,2381,3511,3580,2744],
-    'FK Minutes':        [1021,1082,1025,961,866,901,843,844,865,811,798,730],
-    'BB Now':            [0,698,715,729,691,708,708,687,661,657,650,595],
-    'Rapido':            [3026,3200,1561,4652,5820,5987,4576,4780,4473,4180,3901,2354],
-    'Instamart':         [127,120,97,111,93,109,125,99,108,96,83,71],
-    'Frist Club':        [283,278,290,280,308,277,286,235,220,199,180,159],
-    'Country Delight':   [37,32,29,29,29,28,28,29,29,31,42,13],
-    'Ownly':             [8,10,9,12,10,10,10,11,11,13,19,19]
+    'Blinkit':           [1168,1152,1173,1150,1150,1107,1050,1035,1038,1034,1012,999],
+    'Zepto':             [2177,2236,2315,2288,2240,2116,2077,2106,1964,2110,2136,2241],
+    'FK Minutes':        [1170,1117,1052,1048,1021,1082,1025,961,866,901,843,844],
+    'BB Now':            [661,695,688,714,0,698,715,729,691,708,708,687],
+    'Rapido':            [3269,3183,3437,3558,3026,3200,1561,4652,5820,5987,4576,4780],
+    'Instamart':         [137,135,133,128,127,120,97,111,93,109,125,99],
+    'Frist Club':        [302,298,263,246,283,278,290,280,308,277,286,235],
+    'Country Delight':   [37,37,37,37,37,32,29,29,29,28,28,29],
+    'Ownly':             [8,8,8,8,8,10,9,12,10,10,10,11]
   },
   att:{
-    'Blinkit':           ['–','15%','17%','17%','17%','17%','17%','17%','–','–','–','–'],
-    'Zepto':             ['–','18%','15%','12%','19%','12%','14%','13%','–','–','–','–'],
-    'FK Minutes':        ['–','15%','16%','15%','17%','12%','14%','13%','–','–','–','–'],
-    'BB Now':            ['–','17%','16%','15%','17%','17%','17%','16%','–','–','–','–'],
-    'Rapido':            ['–','24%','70%','27%','24%','25%','26%','25%','–','–','–','–'],
-    'Instamart':         ['–','42%','43%','35%','46%','47%','45%','44%','–','–','–','–'],
-    'Frist Club':        ['–','20%','13%','12%','17%','16%','15%','15%','–','–','–','–'],
+    'Blinkit':           ['16%','17%','16%','17%','–','15%','17%','17%','17%','17%','17%','17%'],
+    'Zepto':             ['16%','17%','14%','14%','–','18%','15%','12%','19%','12%','14%','13%'],
+    'FK Minutes':        ['12%','11%','17%','13%','–','15%','16%','15%','17%','12%','14%','13%'],
+    'BB Now':            ['17%','16%','17%','16%','–','17%','16%','15%','17%','17%','17%','16%'],
+    'Rapido':            ['24%','31%','28%','21%','–','24%','70%','27%','24%','25%','26%','25%'],
+    'Instamart':         ['39%','33%','34%','33%','–','42%','43%','35%','46%','47%','45%','44%'],
+    'Frist Club':        ['20%','17%','15%','17%','–','20%','13%','12%','17%','16%','15%','15%'],
     'Country Delight':   ['–','–','–','–','–','–','–','–','–','–','–','–'],
     'Ownly':             ['–','–','–','–','–','–','–','–','–','–','–','–']
   },
   rev:{
-    'Blinkit':           [4331339,4216819,4326329,4446453,4000417,4116245,4041104,3825815,3840805,3897813,3932090,3964067],
-    'Zepto':             [11133685,10088684,10689700,11083510,10039238,11331784,11281831,12209794,12467181,16095653,18886528,16691709],
-    'FK Minutes':        [4111139,3923000,4318420,4138155,3482723,3573850,3453110,3394733,3305879,2904848,2937865,3208643],
-    'BB Now':            [0,0,0,0,3424498,3376428,3484812,3556191,3473100,3405850,3269602,3352896],
-    'Rapido':            [4230035,5039695,2539652,4813676,6697047,6757991,5784174,5600651,5286387,5473208,4801049,3485934],
-    'Instamart':         [464571,396174,401811,433447,426474,472004,569293,491039,597015,452709,371040,334987],
-    'Frist Club':        [1856124,1746455,2347575,2199366,2337323,1797102,2149934,1821332,1764591,1517392,1382696,1130269],
-    'Country Delight':   [0,0,0,0,0,0,0,94284,0,0,0,0],
-    'Ownly':             [81000,47100,47571,45600,116900,125440,109420,92100,115300,71600,81320,104400]
+    'Blinkit':           [0,4862660,4890527,4256843,4331339,4216819,4326329,4446453,4000417,4116245,4041104,3825815],
+    'Zepto':             [0,12462477,12351781,12121891,11133685,10088684,10689700,11083510,10039238,11331784,11281831,12209794],
+    'FK Minutes':        [0,4820773,4696579,4256843,4111139,3923000,4318420,4138155,3482723,3573850,3453110,3394733],
+    'BB Now':            [0,0,0,4068835,0,0,0,0,3424498,3376428,3484812,3556191],
+    'Rapido':            [0,4653615,4734217,4887976,4230035,5039695,2539652,4813676,6697047,6757991,5784174,5600651],
+    'Instamart':         [0,519481,582703,546957,464571,396174,401811,433447,426474,472004,569293,491039],
+    'Frist Club':        [0,1830218,1943104,1774152,1856124,1746455,2347575,2199366,2337323,1797102,2149934,1821332],
+    'Country Delight':   [0,0,195830,176498,0,0,0,0,0,0,0,94284],
+    'Ownly':             [0,0,0,63300,81000,47100,47571,45600,116900,125440,109420,92100]
   }
 };
 
@@ -1369,8 +1371,8 @@ function renderCityView(){
     </div>
   </div>`;
 
-  // Client weekly trend table (always shows 6-week W28–W23 view)
-  let cityTableH=`<thead><tr><th>CLIENT</th>${W.labels.map((w,i)=>`<th>${w}<br><span style="opacity:.5;font-size:9px;font-weight:400">${W.dates[i]}</span></th>`).join('')}<th class="fx">W28 FOD</th><th class="fx">W28 Revenue</th><th class="fx">W28 Att%</th></tr></thead><tbody>`;
+  // Client weekly trend table (always shows the full W array range, newest week highlighted)
+  let cityTableH=`<thead><tr><th>CLIENT</th>${W.labels.map((w,i)=>`<th>${w}<br><span style="opacity:.5;font-size:9px;font-weight:400">${W.dates[i]}</span></th>`).join('')}<th class="fx">${W.labels[0]} FOD</th><th class="fx">${W.labels[0]} Revenue</th><th class="fx">${W.labels[0]} Att%</th></tr></thead><tbody>`;
   CLIENTS.forEach(c=>{
     if(!share[c])return;
     const meta=CLIENT_META[c];
@@ -1389,7 +1391,7 @@ function renderCityView(){
   ${cityHero}
   <div class="sh" style="margin-top:10px"><span class="sh-title">Client Breakdown — ${cd.city} · ${periodLbl}</span><span class="sh-sub">${vsLbl}</span></div>
   ${clientCards}
-  <div class="tw"><div class="tw-top"><span class="tw-title">Client Trend — ${cd.city} · W28–W23</span></div><div class="ts"><table>${cityTableH}</table></div></div>`;
+  <div class="tw"><div class="tw-top"><span class="tw-title">Client Trend — ${cd.city} · ${W.labels[0]}–${W.labels[W.labels.length-1]}</span></div><div class="ts"><table>${cityTableH}</table></div></div>`;
 }
 
 // ══════════════════════════════════════════════════════════════════════
